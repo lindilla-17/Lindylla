@@ -16,6 +16,7 @@ type Actividad = {
   color: string;
   facturable: boolean;
   precio: number;
+  marcaDia: boolean;
   activa: boolean;
 };
 
@@ -47,6 +48,7 @@ function Fila({ act }: { act: Actividad }) {
   const [nombre, setNombre] = useState(act.nombre);
   const [color, setColor] = useState(act.color);
   const [facturable, setFacturable] = useState(act.facturable);
+  const [marcaDia, setMarcaDia] = useState(act.marcaDia);
   const [precio, setPrecio] = useState(act.precio ? String(act.precio).replace(".", ",") : "");
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -55,11 +57,12 @@ function Fila({ act }: { act: Actividad }) {
     nombre !== act.nombre ||
     color.toLowerCase() !== act.color.toLowerCase() ||
     facturable !== act.facturable ||
+    marcaDia !== act.marcaDia ||
     (parseFloat(precio.replace(",", ".")) || 0) !== act.precio;
 
   async function guardar() {
     setBusy(true); setMsg(null);
-    const r = await actualizarActividad(act.id, { nombre, color, facturable, precio: parseFloat(precio.replace(",", ".")) || 0 });
+    const r = await actualizarActividad(act.id, { nombre, color, facturable, precio: parseFloat(precio.replace(",", ".")) || 0, marcaDia });
     setBusy(false);
     if (!r.ok) return setMsg(r.error);
     router.refresh();
@@ -87,24 +90,31 @@ function Fila({ act }: { act: Actividad }) {
 
       <ColorPicker value={color} onChange={setColor} />
 
-      <div className="flex items-center gap-4 flex-wrap">
-        <label className="inline-flex items-center gap-2 text-[14px] cursor-pointer">
-          <input type="checkbox" checked={facturable} onChange={(e) => setFacturable(e.target.checked)} className="w-4 h-4 accent-[var(--brand-teal-dark)]" />
-          Facturable
-        </label>
-        {facturable && (
-          <div className="flex items-center gap-2">
-            <input
-              value={precio}
-              onChange={(e) => setPrecio(e.target.value)}
-              placeholder="0,00"
-              inputMode="decimal"
-              className="w-24 text-right rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[14px] outline-none focus:border-[var(--brand-teal-dark)]"
-            />
-            <span className="muted text-[13px]">€ / ud.</span>
-          </div>
-        )}
-      </div>
+      <label className="inline-flex items-center gap-2 text-[14px] cursor-pointer">
+        <input type="checkbox" checked={marcaDia} onChange={(e) => setMarcaDia(e.target.checked)} className="w-4 h-4 accent-[var(--brand-teal-dark)]" />
+        Día completo (cuadro grande, sin número)
+      </label>
+
+      {!marcaDia && (
+        <div className="flex items-center gap-4 flex-wrap">
+          <label className="inline-flex items-center gap-2 text-[14px] cursor-pointer">
+            <input type="checkbox" checked={facturable} onChange={(e) => setFacturable(e.target.checked)} className="w-4 h-4 accent-[var(--brand-teal-dark)]" />
+            Facturable
+          </label>
+          {facturable && (
+            <div className="flex items-center gap-2">
+              <input
+                value={precio}
+                onChange={(e) => setPrecio(e.target.value)}
+                placeholder="0,00"
+                inputMode="decimal"
+                className="w-24 text-right rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[14px] outline-none focus:border-[var(--brand-teal-dark)]"
+              />
+              <span className="muted text-[13px]">€ / ud.</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {msg && <div className="text-[12px] text-[var(--tone-rose)]">{msg}</div>}
 
@@ -132,6 +142,7 @@ function Nueva() {
   const [nombre, setNombre] = useState("");
   const [color, setColor] = useState(PALETA[3]);
   const [facturable, setFacturable] = useState(true);
+  const [marcaDia, setMarcaDia] = useState(false);
   const [precio, setPrecio] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -139,10 +150,10 @@ function Nueva() {
   async function crear(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true); setMsg(null);
-    const r = await crearActividad({ nombre, color, facturable, precio: parseFloat(precio.replace(",", ".")) || 0 });
+    const r = await crearActividad({ nombre, color, facturable, precio: parseFloat(precio.replace(",", ".")) || 0, marcaDia });
     setBusy(false);
     if (!r.ok) return setMsg(r.error);
-    setNombre(""); setPrecio(""); setFacturable(true); setColor(PALETA[3]);
+    setNombre(""); setPrecio(""); setFacturable(true); setMarcaDia(false); setColor(PALETA[3]);
     router.refresh();
   }
 
@@ -152,24 +163,34 @@ function Nueva() {
       <input
         value={nombre}
         onChange={(e) => setNombre(e.target.value)}
-        placeholder="Nombre (ej.: Revisión, Reunión, Guardia...)"
+        placeholder="Nombre (ej.: Peluquería, Uñas, Vacaciones...)"
         className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[14px] outline-none focus:border-[var(--brand-teal-dark)]"
       />
       <ColorPicker value={color} onChange={setColor} />
-      <div className="flex items-center gap-4 flex-wrap">
-        <label className="inline-flex items-center gap-2 text-[14px] cursor-pointer">
-          <input type="checkbox" checked={facturable} onChange={(e) => setFacturable(e.target.checked)} className="w-4 h-4 accent-[var(--brand-teal-dark)]" />
-          Facturable
-        </label>
-        {facturable && (
-          <div className="flex items-center gap-2">
-            <input value={precio} onChange={(e) => setPrecio(e.target.value)} placeholder="0,00" inputMode="decimal"
-              className="w-24 text-right rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[14px] outline-none focus:border-[var(--brand-teal-dark)]" />
-            <span className="muted text-[13px]">€ / ud.</span>
-          </div>
-        )}
-      </div>
-      {!facturable && <p className="muted-2 text-[12px]">No facturable: se apunta en la agenda pero no suma a la factura del mes.</p>}
+      <label className="inline-flex items-center gap-2 text-[14px] cursor-pointer">
+        <input type="checkbox" checked={marcaDia} onChange={(e) => setMarcaDia(e.target.checked)} className="w-4 h-4 accent-[var(--brand-teal-dark)]" />
+        Día completo (cuadro grande, sin número)
+      </label>
+      {!marcaDia && (
+        <div className="flex items-center gap-4 flex-wrap">
+          <label className="inline-flex items-center gap-2 text-[14px] cursor-pointer">
+            <input type="checkbox" checked={facturable} onChange={(e) => setFacturable(e.target.checked)} className="w-4 h-4 accent-[var(--brand-teal-dark)]" />
+            Facturable
+          </label>
+          {facturable && (
+            <div className="flex items-center gap-2">
+              <input value={precio} onChange={(e) => setPrecio(e.target.value)} placeholder="0,00" inputMode="decimal"
+                className="w-24 text-right rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[14px] outline-none focus:border-[var(--brand-teal-dark)]" />
+              <span className="muted text-[13px]">€ / ud.</span>
+            </div>
+          )}
+        </div>
+      )}
+      {marcaDia ? (
+        <p className="muted-2 text-[12px]">Día completo: marca el día entero con un cuadro de color (ej. Vacaciones). No lleva número ni se factura.</p>
+      ) : !facturable ? (
+        <p className="muted-2 text-[12px]">No facturable: se apunta en la agenda pero no suma a la factura del mes.</p>
+      ) : null}
       {msg && <div className="text-[12px] text-[var(--tone-rose)]">{msg}</div>}
       <button type="submit" disabled={busy}
         className="rounded-lg bg-[var(--brand-teal-dark)] text-white px-4 py-2 text-[14px] font-medium hover:opacity-90 disabled:opacity-50 self-start">

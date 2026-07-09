@@ -28,6 +28,7 @@ export default async function AgendaPage({
   const nombreDe = (id: string) => actividades.find((a) => a.id === id)?.nombre ?? "—";
   const facturableDe = (id: string) => actividades.find((a) => a.id === id)?.facturable ?? false;
   const precioDe = (id: string) => actividades.find((a) => a.id === id)?.precio ?? 0;
+  const marcaDiaDe = (id: string) => actividades.find((a) => a.id === id)?.marcaDia ?? false;
   const hayPrecios = actividades.some((a) => a.facturable && a.precio > 0);
 
   // Mes visible (?mes=YYYY-MM); por defecto el actual
@@ -140,8 +141,13 @@ export default async function AgendaPage({
                       {dia}{esHoy && " ·"}
                     </span>
                     {trabajoDia && (
-                      <div className="flex flex-wrap gap-1 mt-auto">
-                        {Object.entries(trabajoDia).map(([id, uds]) => (
+                      <div className="flex flex-wrap items-center gap-1 mt-auto">
+                        {/* Días completos: cuadro liso grande, sin número */}
+                        {Object.keys(trabajoDia).filter((id) => marcaDiaDe(id)).map((id) => (
+                          <span key={id} className="w-6 h-6 rounded-md border border-black/5" style={{ background: colorDe(id) }} title={nombreDe(id)} />
+                        ))}
+                        {/* Resto: badge con número */}
+                        {Object.entries(trabajoDia).filter(([id]) => !marcaDiaDe(id)).map(([id, uds]) => (
                           <span key={id} className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded text-[11px] font-bold text-white"
                             style={{ background: colorDe(id) }} title={nombreDe(id)}>
                             {uds}
@@ -173,7 +179,7 @@ export default async function AgendaPage({
             <div className="p-4 flex flex-col gap-4">
               <ApuntarTrabajoForm
                 fecha={diaSel}
-                actividades={activas.map((a) => ({ id: a.id, nombre: a.nombre, color: a.color, facturable: a.facturable }))}
+                actividades={activas.map((a) => ({ id: a.id, nombre: a.nombre, color: a.color, facturable: a.facturable, marcaDia: a.marcaDia }))}
               />
 
               {delDia.length > 0 && (
@@ -213,11 +219,17 @@ export default async function AgendaPage({
                       {nombreDe(id)}
                     </span>
                     <span className="font-medium">
-                      {totMes[id] ?? 0}
-                      {facturableDe(id) && precioDe(id) > 0 && (
-                        <span className="muted-2 text-[12px]"> · {euro((totPend[id] ?? 0) * precioDe(id))}</span>
+                      {marcaDiaDe(id) ? (
+                        <>{totMes[id] ?? 0} <span className="muted-2 text-[12px]">día{(totMes[id] ?? 0) === 1 ? "" : "s"}</span></>
+                      ) : (
+                        <>
+                          {totMes[id] ?? 0}
+                          {facturableDe(id) && precioDe(id) > 0 && (
+                            <span className="muted-2 text-[12px]"> · {euro((totPend[id] ?? 0) * precioDe(id))}</span>
+                          )}
+                          {!facturableDe(id) && <span className="muted-2 text-[12px]"> · no factura</span>}
+                        </>
                       )}
-                      {!facturableDe(id) && <span className="muted-2 text-[12px]"> · no factura</span>}
                     </span>
                   </div>
                 ))

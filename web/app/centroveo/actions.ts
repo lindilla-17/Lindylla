@@ -163,22 +163,26 @@ export async function asegurarActividades() {
   }
 }
 
-// Crea una actividad nueva (facturable o no)
+// Crea una actividad nueva (facturable o no; marcaDia = día completo sin número)
 export async function crearActividad(input: {
   nombre: string;
   color: string;
   facturable: boolean;
   precio: number;
+  marcaDia?: boolean;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const nombre = input.nombre.trim();
   if (!nombre) return { ok: false, error: "Ponle un nombre a la actividad." };
+  const marcaDia = !!input.marcaDia;
+  const facturable = marcaDia ? false : input.facturable; // un día completo no se factura por unidades
   const max = await prisma.centroveoActividad.aggregate({ _max: { orden: true } });
   await prisma.centroveoActividad.create({
     data: {
       nombre,
       color: input.color || "#4e8f84",
-      facturable: input.facturable,
-      precio: input.facturable ? Math.max(0, Math.round((input.precio || 0) * 100) / 100) : 0,
+      facturable,
+      precio: facturable ? Math.max(0, Math.round((input.precio || 0) * 100) / 100) : 0,
+      marcaDia,
       orden: (max._max.orden ?? 0) + 1,
     },
   });
@@ -186,20 +190,23 @@ export async function crearActividad(input: {
   return { ok: true };
 }
 
-// Actualiza nombre, color, facturable o precio de una actividad
+// Actualiza nombre, color, facturable, precio o tipo (día completo) de una actividad
 export async function actualizarActividad(
   id: string,
-  input: { nombre: string; color: string; facturable: boolean; precio: number }
+  input: { nombre: string; color: string; facturable: boolean; precio: number; marcaDia?: boolean }
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const nombre = input.nombre.trim();
   if (!nombre) return { ok: false, error: "El nombre no puede quedar vacío." };
+  const marcaDia = !!input.marcaDia;
+  const facturable = marcaDia ? false : input.facturable;
   await prisma.centroveoActividad.update({
     where: { id },
     data: {
       nombre,
       color: input.color || "#4e8f84",
-      facturable: input.facturable,
-      precio: input.facturable ? Math.max(0, Math.round((input.precio || 0) * 100) / 100) : 0,
+      facturable,
+      precio: facturable ? Math.max(0, Math.round((input.precio || 0) * 100) / 100) : 0,
+      marcaDia,
     },
   });
   refrescar();
@@ -235,8 +242,19 @@ export async function apuntarTrabajo(input: {
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const act = await prisma.centroveoActividad.findUnique({ where: { id: input.actividadId } });
   if (!act) return { ok: false, error: "Actividad no válida." };
-  const cantidad = Math.floor(input.cantidad);
+  // Las actividades de día completo (ej. Vacaciones) no llevan número: siempre 1
+  const cantidad = act.marcaDia ? 1 : Math.floor(input.cantidad);
   if (!(cantidad > 0)) return { ok: false, error: "La cantidad debe ser 1 o más." };
+
+  // Un día completo se apunta una sola vez por día: si ya está, no duplicamos
+  if (act.marcaDia) {
+    const desde = new Date(`${input.fecha}T00:00:00`);
+    const hasta = new Date(`${input.fecha}T23:59:59`);
+    const ya = await prisma.centroveoTrabajo.findFirst({
+      where: { actividadId: input.actividadId, fecha: { gte: desde, lte: hasta } },
+    });
+    if (ya) return { ok: true }; // ya marcado ese día
+  }
 
   // Guardamos la fecha a mediodía para evitar líos de zona horaria
   await prisma.centroveoTrabajo.create({

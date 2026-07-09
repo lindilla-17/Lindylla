@@ -22,7 +22,7 @@ export default async function ActividadesPage() {
       </div>
       <ActividadesManager
         actividades={actividades.map((a) => ({
-          id: a.id, nombre: a.nombre, color: a.color, facturable: a.facturable, precio: a.precio, activa: a.activa,
+          id: a.id, nombre: a.nombre, color: a.color, facturable: a.facturable, precio: a.precio, marcaDia: a.marcaDia, activa: a.activa,
         }))}
       />
     </Page>

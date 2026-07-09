@@ -133,6 +133,7 @@ model CentroveoActividad {
   color      String             @default("#4e8f84") // color elegido por la usuaria
   facturable Boolean            @default(true) // si suma a la factura profesional del mes
   precio     Float              @default(0) // precio por unidad (solo si facturable)
+  marcaDia   Boolean            @default(false) // día completo: cuadro liso grande, sin número (ej. Vacaciones)
   orden      Int                @default(0)
   activa     Boolean            @default(true) // desactivada = no se ofrece para nuevos apuntes
   trabajos   CentroveoTrabajo[]
