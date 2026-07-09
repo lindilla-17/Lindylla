@@ -124,24 +124,33 @@ model CentroveoFactura {
   createdAt DateTime  @default(now())
 }
 
-// Precio por tipo de trabajo profesional (editable; se rellena más adelante)
-model CentroveoTarifa {
-  id     String @id @default(cuid())
-  tipo   String @unique // CONSULTA | CATARATA | REFRACTIVA
-  precio Float  @default(0)
+// Actividades de la agenda, definidas por la usuaria: cada una con su
+// nombre, color, si es facturable y su precio. Se pueden añadir las que
+// quiera (facturables o no, p. ej. una nota interna que no se cobra).
+model CentroveoActividad {
+  id         String             @id @default(cuid())
+  nombre     String
+  color      String             @default("#4e8f84") // color elegido por la usuaria
+  facturable Boolean            @default(true) // si suma a la factura profesional del mes
+  precio     Float              @default(0) // precio por unidad (solo si facturable)
+  orden      Int                @default(0)
+  activa     Boolean            @default(true) // desactivada = no se ofrece para nuevos apuntes
+  trabajos   CentroveoTrabajo[]
+  createdAt  DateTime           @default(now())
 }
 
 // Agenda de trabajo profesional: cada apunte es el trabajo de un día
-// (nº de consultas / cirugías). Al facturar el mes se enlaza a una factura.
+// (nº de una actividad). Al facturar el mes se enlaza a una factura.
 model CentroveoTrabajo {
-  id        String            @id @default(cuid())
-  fecha     DateTime
-  tipo      String // CONSULTA | CATARATA | REFRACTIVA
-  cantidad  Int               @default(1)
-  notas     String?
-  facturaId String? // si ya se facturó, apunta a la CentroveoFactura del mes
-  factura   CentroveoFactura? @relation(fields: [facturaId], references: [id])
-  createdAt DateTime          @default(now())
+  id          String             @id @default(cuid())
+  fecha       DateTime
+  actividadId String
+  actividad   CentroveoActividad @relation(fields: [actividadId], references: [id])
+  cantidad    Int                @default(1)
+  notas       String?
+  facturaId   String? // si ya se facturó, apunta a la CentroveoFactura del mes
+  factura     CentroveoFactura?  @relation(fields: [facturaId], references: [id])
+  createdAt   DateTime           @default(now())
 }
 
 // Facturas de proveedores de Centroveo (compras de lentes, material óptico...)

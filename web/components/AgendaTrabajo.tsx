@@ -4,27 +4,33 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { apuntarTrabajo, eliminarTrabajo, facturarMes } from "@/app/centroveo/actions";
 
-const TIPOS: { tipo: "CONSULTA" | "CATARATA" | "REFRACTIVA"; label: string; corto: string }[] = [
-  { tipo: "CONSULTA", label: "Consulta", corto: "Consultas" },
-  { tipo: "CATARATA", label: "Cirugía de cataratas", corto: "Cataratas" },
-  { tipo: "REFRACTIVA", label: "Cirugía refractiva", corto: "Refractivas" },
-];
+type Actividad = { id: string; nombre: string; color: string; facturable: boolean };
 
 // Formulario para apuntar trabajo en el día seleccionado.
+// Las actividades vienen de la base de datos (nombre y color elegidos por la usuaria).
 // Pensado para usarse cómodo también desde el móvil (botones grandes).
-export function ApuntarTrabajoForm({ fecha }: { fecha: string }) {
+export function ApuntarTrabajoForm({ fecha, actividades }: { fecha: string; actividades: Actividad[] }) {
   const router = useRouter();
-  const [tipo, setTipo] = useState<"CONSULTA" | "CATARATA" | "REFRACTIVA">("CONSULTA");
+  const [actividadId, setActividadId] = useState(actividades[0]?.id ?? "");
   const [cantidad, setCantidad] = useState(1);
   const [notas, setNotas] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
+  if (actividades.length === 0) {
+    return (
+      <p className="muted text-[14px]">
+        No hay actividades activas.{" "}
+        <a href="/centroveo/actividades" className="text-[var(--brand-teal-dark)] hover:underline">Crea o activa alguna aquí</a>.
+      </p>
+    );
+  }
+
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setEnviando(true);
-    const r = await apuntarTrabajo({ fecha, tipo, cantidad, notas });
+    const r = await apuntarTrabajo({ fecha, actividadId, cantidad, notas });
     setEnviando(false);
     if (!r.ok) return setError(r.error);
     setCantidad(1);
@@ -34,22 +40,26 @@ export function ApuntarTrabajoForm({ fecha }: { fecha: string }) {
 
   return (
     <form onSubmit={enviar} className="flex flex-col gap-3">
-      {/* Tipo de trabajo: botones grandes */}
+      {/* Actividad: botones grandes con su color */}
       <div className="flex flex-col gap-2">
-        {TIPOS.map((t) => (
-          <button
-            type="button"
-            key={t.tipo}
-            onClick={() => setTipo(t.tipo)}
-            className={`text-left px-4 py-2.5 rounded-xl border text-[14px] font-medium transition-colors ${
-              tipo === t.tipo
-                ? "bg-[var(--accent-soft)] border-[rgba(78,143,132,.45)] text-[var(--brand-teal-dark)]"
-                : "border-[var(--border)] muted hover:bg-[var(--surface-2)]"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+        {actividades.map((a) => {
+          const sel = actividadId === a.id;
+          return (
+            <button
+              type="button"
+              key={a.id}
+              onClick={() => setActividadId(a.id)}
+              className={`flex items-center gap-2.5 text-left px-4 py-2.5 rounded-xl border text-[14px] font-medium transition-colors ${
+                sel ? "text-white" : "border-[var(--border)] muted hover:bg-[var(--surface-2)]"
+              }`}
+              style={sel ? { background: a.color, borderColor: a.color } : { borderColor: undefined }}
+            >
+              <span className="w-3.5 h-3.5 rounded-full flex-none border border-white/40" style={{ background: sel ? "rgba(255,255,255,.9)" : a.color }} />
+              <span className="flex-1">{a.nombre}</span>
+              {!a.facturable && <span className={`text-[11px] ${sel ? "text-white/80" : "muted-2"}`}>no facturable</span>}
+            </button>
+          );
+        })}
       </div>
 
       {/* Cantidad con +/- (cómodo en móvil) */}

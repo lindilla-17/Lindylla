@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { TRABAJOS, etiquetaCantidad, type TipoTrabajo } from "./trabajos";
+import { ACTIVIDADES_DEFECTO } from "./trabajos";
 
 // ============================================================
 // Acciones de CENTROVEO (actividad sanitaria de Lindilla S.L.)
@@ -17,7 +17,7 @@ function refrescar() {
   revalidatePath("/centroveo/profesionales");
   revalidatePath("/centroveo/proveedores");
   revalidatePath("/centroveo/agenda");
-  revalidatePath("/centroveo/tarifas");
+  revalidatePath("/centroveo/actividades");
   revalidatePath("/");
 }
 
@@ -153,39 +153,88 @@ export async function eliminarCentroveoGasto(id: string) {
 // AGENDA de trabajo profesional (calendario → facturas profesionales)
 // ============================================================
 
-// Asegura que existen las 3 tarifas (a 0 € hasta que Mercedes las rellene)
-export async function asegurarTarifas() {
-  for (const tipo of Object.keys(TRABAJOS)) {
-    await prisma.centroveoTarifa.upsert({
-      where: { tipo },
-      create: { tipo, precio: 0 },
-      update: {},
+// Crea las actividades por defecto la primera vez (si no hay ninguna)
+export async function asegurarActividades() {
+  const n = await prisma.centroveoActividad.count();
+  if (n === 0) {
+    await prisma.centroveoActividad.createMany({
+      data: ACTIVIDADES_DEFECTO.map((a, i) => ({ ...a, precio: 0, orden: i })),
     });
   }
 }
 
-// Guarda los precios por tipo de trabajo
-export async function guardarTarifas(precios: { tipo: string; precio: number }[]) {
-  for (const p of precios) {
-    const precio = Math.max(0, Math.round((p.precio || 0) * 100) / 100);
-    await prisma.centroveoTarifa.upsert({
-      where: { tipo: p.tipo },
-      create: { tipo: p.tipo, precio },
-      update: { precio },
-    });
-  }
+// Crea una actividad nueva (facturable o no)
+export async function crearActividad(input: {
+  nombre: string;
+  color: string;
+  facturable: boolean;
+  precio: number;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const nombre = input.nombre.trim();
+  if (!nombre) return { ok: false, error: "Ponle un nombre a la actividad." };
+  const max = await prisma.centroveoActividad.aggregate({ _max: { orden: true } });
+  await prisma.centroveoActividad.create({
+    data: {
+      nombre,
+      color: input.color || "#4e8f84",
+      facturable: input.facturable,
+      precio: input.facturable ? Math.max(0, Math.round((input.precio || 0) * 100) / 100) : 0,
+      orden: (max._max.orden ?? 0) + 1,
+    },
+  });
   refrescar();
-  return { ok: true as const };
+  return { ok: true };
+}
+
+// Actualiza nombre, color, facturable o precio de una actividad
+export async function actualizarActividad(
+  id: string,
+  input: { nombre: string; color: string; facturable: boolean; precio: number }
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const nombre = input.nombre.trim();
+  if (!nombre) return { ok: false, error: "El nombre no puede quedar vacío." };
+  await prisma.centroveoActividad.update({
+    where: { id },
+    data: {
+      nombre,
+      color: input.color || "#4e8f84",
+      facturable: input.facturable,
+      precio: input.facturable ? Math.max(0, Math.round((input.precio || 0) * 100) / 100) : 0,
+    },
+  });
+  refrescar();
+  return { ok: true };
+}
+
+// Activa/desactiva una actividad (desactivada = no se ofrece para nuevos apuntes,
+// pero se conserva el histórico ya apuntado)
+export async function toggleActividadActiva(id: string) {
+  const a = await prisma.centroveoActividad.findUnique({ where: { id } });
+  if (!a) return;
+  await prisma.centroveoActividad.update({ where: { id }, data: { activa: !a.activa } });
+  refrescar();
+}
+
+// Borra una actividad SOLO si no tiene ningún trabajo apuntado
+export async function eliminarActividad(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const usos = await prisma.centroveoTrabajo.count({ where: { actividadId: id } });
+  if (usos > 0) {
+    return { ok: false, error: "Esta actividad ya tiene trabajos apuntados. Puedes desactivarla, pero no borrarla (perderías el histórico)." };
+  }
+  await prisma.centroveoActividad.delete({ where: { id } });
+  refrescar();
+  return { ok: true };
 }
 
 // Apunta un trabajo en un día del calendario
 export async function apuntarTrabajo(input: {
   fecha: string; // yyyy-mm-dd
-  tipo: TipoTrabajo;
+  actividadId: string;
   cantidad: number;
   notas?: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
-  if (!TRABAJOS[input.tipo]) return { ok: false, error: "Tipo de trabajo no válido." };
+  const act = await prisma.centroveoActividad.findUnique({ where: { id: input.actividadId } });
+  if (!act) return { ok: false, error: "Actividad no válida." };
   const cantidad = Math.floor(input.cantidad);
   if (!(cantidad > 0)) return { ok: false, error: "La cantidad debe ser 1 o más." };
 
@@ -193,7 +242,7 @@ export async function apuntarTrabajo(input: {
   await prisma.centroveoTrabajo.create({
     data: {
       fecha: new Date(`${input.fecha}T12:00:00`),
-      tipo: input.tipo,
+      actividadId: input.actividadId,
       cantidad,
       notas: input.notas?.trim() || null,
     },
@@ -210,9 +259,10 @@ export async function eliminarTrabajo(id: string) {
   refrescar();
 }
 
-// Genera la factura profesional de un mes: suma el trabajo pendiente
-// (cantidad × tarifa) en una CentroveoFactura tipo PROFESIONAL, exenta de IVA,
-// y enlaza esos apuntes a la factura para que no se vuelvan a facturar.
+// Genera la factura profesional de un mes: suma el trabajo pendiente de las
+// actividades FACTURABLES (cantidad × precio) en una CentroveoFactura tipo
+// PROFESIONAL, exenta de IVA, y enlaza esos apuntes a la factura.
+// Las actividades no facturables se quedan en la agenda como registro, sin cobrarse.
 export async function facturarMes(
   mes: string // "yyyy-mm"
 ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
@@ -222,31 +272,26 @@ export async function facturarMes(
   const hasta = new Date(y, m, 1);
 
   const trabajos = await prisma.centroveoTrabajo.findMany({
-    where: { facturaId: null, fecha: { gte: desde, lt: hasta } },
+    where: { facturaId: null, fecha: { gte: desde, lt: hasta }, actividad: { facturable: true } },
+    include: { actividad: true },
   });
-  if (trabajos.length === 0) return { ok: false, error: "No hay trabajo pendiente de facturar en ese mes." };
+  if (trabajos.length === 0) return { ok: false, error: "No hay trabajo facturable pendiente en ese mes." };
 
-  const tarifas = await prisma.centroveoTarifa.findMany();
-  const precioDe = (tipo: string) => tarifas.find((t) => t.tipo === tipo)?.precio ?? 0;
-
-  // Totales por tipo
-  const cont: Record<string, number> = {};
-  for (const t of trabajos) cont[t.tipo] = (cont[t.tipo] ?? 0) + t.cantidad;
-
-  if (Object.keys(cont).every((tipo) => precioDe(tipo) === 0)) {
-    return { ok: false, error: "Los precios de los trabajos están a 0 €. Pon las tarifas antes de facturar el mes." };
+  // Agrupa por actividad
+  const grupos = new Map<string, { nombre: string; precio: number; uds: number }>();
+  for (const t of trabajos) {
+    const g = grupos.get(t.actividadId) ?? { nombre: t.actividad.nombre, precio: t.actividad.precio, uds: 0 };
+    g.uds += t.cantidad;
+    grupos.set(t.actividadId, g);
   }
 
-  const neto =
-    Math.round(
-      Object.entries(cont).reduce((s, [tipo, uds]) => s + uds * precioDe(tipo), 0) * 100
-    ) / 100;
+  if ([...grupos.values()].every((g) => g.precio === 0)) {
+    return { ok: false, error: "Los precios de las actividades facturables están a 0 €. Ponlos antes de facturar el mes." };
+  }
 
-  const partes = Object.entries(cont)
-    .map(([tipo, uds]) => etiquetaCantidad(tipo as TipoTrabajo, uds))
-    .join(", ");
+  const neto = Math.round([...grupos.values()].reduce((s, g) => s + g.uds * g.precio, 0) * 100) / 100;
+  const partes = [...grupos.values()].map((g) => `${g.uds} × ${g.nombre}`).join(", ");
   const nombreMes = desde.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
-
   const numero = await siguienteNumeroCentroveo();
 
   const factura = await prisma.centroveoFactura.create({
@@ -255,7 +300,7 @@ export async function facturarMes(
       tipo: "PROFESIONAL",
       cliente: "Hospital Vithas Xanit",
       concepto: `Trabajos profesionales de optometría — ${nombreMes}: ${partes}`,
-      fecha: hasta > new Date() ? new Date() : new Date(y, m, 0), // último día del mes (o hoy si es el mes en curso)
+      fecha: hasta > new Date() ? new Date() : new Date(y, m, 0),
       estado: "PENDIENTE",
       neto,
       iva: 0,

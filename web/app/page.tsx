@@ -5,8 +5,20 @@ import { Page, PageHeader, StatCard, Panel, Badge } from "@/components/ui";
 import { YearChart } from "@/components/YearChart";
 import { estadoFactura, tipoPresupuesto } from "@/lib/estados";
 import Link from "next/link";
+import fs from "fs";
+import path from "path";
 
 export const dynamic = "force-dynamic";
+
+// Busca el logo de Centroveo en /public (centroveo.png/.jpg/.jpeg/.svg/.webp).
+// Si la dueña deja el archivo ahí, aparece solo; si no, no se rompe nada.
+function logoCentroveo(): string | null {
+  const dir = path.join(process.cwd(), "public");
+  for (const ext of ["png", "jpg", "jpeg", "svg", "webp"]) {
+    if (fs.existsSync(path.join(dir, `centroveo.${ext}`))) return `/centroveo.${ext}`;
+  }
+  return null;
+}
 
 export default async function DashboardPage() {
   const now = new Date();
@@ -190,8 +202,19 @@ export default async function DashboardPage() {
           ============================================================ */}
       <aside className="w-full xl:w-[320px] flex-none border-t xl:border-t-0 xl:border-l border-[var(--border)] bg-[var(--side)] px-6 py-7">
         <div className="mb-5">
-          <h2 className="text-[20px] font-semibold tracking-tight">Centroveo</h2>
-          <p className="muted text-[13px] mt-1">
+          {logoCentroveo() ? (
+            <Link href="/centroveo" className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={logoCentroveo()!} alt="Centroveo" className="h-14 w-auto" />
+              <div>
+                <div className="font-semibold text-[17px] leading-tight">Centroveo</div>
+                <div className="muted-2 text-[12px] leading-tight">Actividad sanitaria</div>
+              </div>
+            </Link>
+          ) : (
+            <h2 className="text-[20px] font-semibold tracking-tight">Centroveo</h2>
+          )}
+          <p className="muted text-[13px] mt-2">
             Actividad sanitaria · óptica y optometría.
             <br />
             Gestión independiente de los gorros.

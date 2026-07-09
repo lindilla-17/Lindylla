@@ -1,22 +1,14 @@
-// Tipos de trabajo profesional y su etiqueta legible.
-// En módulo aparte (no "use server") para poder exportar la constante
-// y usarla tanto en servidor como en componentes cliente.
-export const TRABAJOS = {
-  CONSULTA: "Consulta",
-  CATARATA: "Cirugía de cataratas",
-  REFRACTIVA: "Cirugía refractiva",
-} as const;
+// Actividades por defecto de la agenda (solo se crean la primera vez;
+// luego la usuaria puede editarlas, cambiar color, precio, o añadir más).
+// Colores de arranque bien diferenciados; son editables desde la web.
+export const ACTIVIDADES_DEFECTO = [
+  { nombre: "Consulta", color: "#2563eb", facturable: true }, // azul
+  { nombre: "Cirugía de cataratas", color: "#e4056f", facturable: true }, // fucsia (marca)
+  { nombre: "Cirugía refractiva", color: "#d97706", facturable: true }, // ámbar
+];
 
-export type TipoTrabajo = keyof typeof TRABAJOS;
-
-// Formas singular/plural para redactar los conceptos de factura
-const PLURAL: Record<TipoTrabajo, [string, string]> = {
-  CONSULTA: ["consulta", "consultas"],
-  CATARATA: ["cirugía de cataratas", "cirugías de cataratas"],
-  REFRACTIVA: ["cirugía refractiva", "cirugías refractivas"],
-};
-
-// Ej.: (CATARATA, 2) -> "2 cirugías de cataratas"
-export function etiquetaCantidad(tipo: TipoTrabajo, n: number): string {
-  return `${n} ${PLURAL[tipo][n === 1 ? 0 : 1]}`;
-}
+// Paleta sugerida para el selector de color (además del color libre)
+export const PALETA = [
+  "#2563eb", "#e4056f", "#d97706", "#16a34a", "#7c3aed",
+  "#0891b2", "#dc2626", "#4e8f84", "#ca8a04", "#64748b",
+];

@@ -44,7 +44,8 @@ sin usuarios ni seguridad, y quedan huecos (ver sección 3).
 - **Facturas**: listado por año con ordenación, **crear desde la web** (numeración automática), editar, borrar, marcar pagada/pendiente e **imprimir con la plantilla de Lindilla**.
 - **Presupuestos / Empresas / Productos / Gorros**: navegables con datos reales.
 - **Centroveo (actividad sanitaria, NUEVO 09/07/2026)**: sección independiente con panel propio y 3 apartados — facturas emitidas (lentes de contacto, IVA 10%), facturas de proveedores y facturas de trabajos profesionales (optometría en Vithas Xanit, exentas de IVA). Crear, marcar cobrada/pagado y borrar funcionan y guardan en tablas separadas: sus datos NO se mezclan con la actividad de gorros.
-- **Agenda de Centroveo (NUEVO 09/07/2026)**: calendario mensual (usable en móvil) para apuntar el trabajo diario (consultas / cirugías de cataratas / cirugías refractivas). Con precios por tipo (editables en /centroveo/tarifas) calcula el importe del mes y, con un botón, genera la factura profesional del mes (exenta de IVA) que aparece en "trabajos profesionales". Verificado el flujo completo: apuntar → tarifas → facturar mes.
+- **Agenda de Centroveo (NUEVO 09/07/2026)**: calendario mensual (usable en móvil) para apuntar el trabajo diario. Las **actividades las define la usuaria** en /centroveo/actividades: nombre, **color a elegir**, si es **facturable** (con su precio) o solo un registro. Se pueden añadir todas las que quiera. Por defecto vienen Consulta, Cirugía de cataratas y Cirugía refractiva (colores distintos, editables). Con los precios puestos, calcula el importe del mes y, con un botón, genera la factura profesional del mes (exenta de IVA) sumando **solo lo facturable**. Verificado: apuntar → precios → facturar mes (excluye lo no facturable).
+- **Logo de Centroveo**: la columna del panel muestra el logo automáticamente si existe `web/public/centroveo.png` (o .jpg/.svg/.webp). Aún NO añadido (falta el archivo).
 
 ---
 
