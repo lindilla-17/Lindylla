@@ -188,7 +188,7 @@ export default async function DashboardPage() {
           Columna independiente: misma web, gestión y datos separados
           de la actividad de gorros.
           ============================================================ */}
-      <aside className="w-full xl:w-[320px] flex-none border-t xl:border-t-0 xl:border-l border-[var(--border)] bg-[var(--bg-soft)] px-6 py-7">
+      <aside className="w-full xl:w-[320px] flex-none border-t xl:border-t-0 xl:border-l border-[var(--border)] bg-[var(--side)] px-6 py-7">
         <div className="mb-5">
           <h2 className="text-[20px] font-semibold tracking-tight">Centroveo</h2>
           <p className="muted text-[13px] mt-1">
@@ -208,6 +208,7 @@ export default async function DashboardPage() {
 
         {/* Apartados */}
         <nav className="flex flex-col gap-2">
+          <CentroveoLink href="/centroveo/agenda" titulo="📅 Agenda de trabajo" detalle="Consultas y cirugías día a día" />
           <CentroveoLink href="/centroveo/emitidas" titulo="Facturas emitidas" detalle="Lentes de contacto · IVA 10%" />
           <CentroveoLink href="/centroveo/proveedores" titulo="Facturas de proveedores" detalle="Compras de la actividad" />
           <CentroveoLink href="/centroveo/profesionales" titulo="Facturas de trabajos profesionales" detalle="Optometría · exentas de IVA" />

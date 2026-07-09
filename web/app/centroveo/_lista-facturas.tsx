@@ -35,8 +35,13 @@ export async function ListaFacturasCentroveo({
         action={<ActionLink href={`/centroveo/nueva?tipo=${tipo}`}>+ Nueva factura</ActionLink>}
       />
 
-      <div className="mb-4">
+      <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
         <Link href="/centroveo" className="text-[13px] text-[var(--brand-teal-dark)] hover:underline">← Volver a Centroveo</Link>
+        {tipo === "PROFESIONAL" && (
+          <Link href="/centroveo/agenda" className="text-[13px] muted hover:text-[var(--text)] hover:underline">
+            📅 Ir a la agenda de trabajo →
+          </Link>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">

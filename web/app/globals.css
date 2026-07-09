@@ -10,6 +10,9 @@
   --surface-2: #f0f6f4;
   --border: #dce8e4;
   --border-soft: #e7f0ed;
+  /* Fondo de las columnas laterales: un tono más oscuro dentro de la gama
+     menta/teal, para diferenciarlas del contenido central */
+  --side: #dde9e4;
   --text: #16211e;
   --muted: #5b6b66;
   --muted-2: #8aa19a;

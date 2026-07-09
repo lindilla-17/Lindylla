@@ -40,6 +40,17 @@ export default async function CentroveoPage() {
         <StatCard label="Pendiente de cobro" value={euro(pendienteCobro)} tone="amber" sub="todas las series" />
       </div>
 
+      {/* Agenda de trabajo → alimenta las facturas profesionales */}
+      <Link href="/centroveo/agenda" className="card card-hover p-5 block mb-5 flex items-center justify-between gap-4">
+        <div>
+          <div className="font-semibold text-[15px]">📅 Agenda de trabajo</div>
+          <p className="muted text-[13px] mt-1">
+            Apunta tus consultas y cirugías día a día. Cada mes se convierte en una factura de trabajos profesionales.
+          </p>
+        </div>
+        <span className="text-[13px] text-[var(--brand-teal-dark)] flex-none">Abrir →</span>
+      </Link>
+
       {/* Apartados */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
         <Apartado

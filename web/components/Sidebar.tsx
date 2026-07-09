@@ -17,7 +17,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-[248px] flex-none border-r border-[var(--border)] bg-[var(--bg-soft)] flex flex-col sticky top-0 h-screen">
+    <aside className="w-[248px] flex-none border-r border-[var(--border)] bg-[var(--side)] flex flex-col sticky top-0 h-screen">
       {/* Marca */}
       <div className="px-5 pt-6 pb-5">
         <Link href="/" className="flex items-center gap-3">

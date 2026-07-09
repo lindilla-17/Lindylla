@@ -120,7 +120,28 @@ model CentroveoFactura {
   total     Float     @default(0)
   archivo   String?
   notas     String?
+  trabajos  CentroveoTrabajo[] // partes de agenda que se facturaron aquí
   createdAt DateTime  @default(now())
+}
+
+// Precio por tipo de trabajo profesional (editable; se rellena más adelante)
+model CentroveoTarifa {
+  id     String @id @default(cuid())
+  tipo   String @unique // CONSULTA | CATARATA | REFRACTIVA
+  precio Float  @default(0)
+}
+
+// Agenda de trabajo profesional: cada apunte es el trabajo de un día
+// (nº de consultas / cirugías). Al facturar el mes se enlaza a una factura.
+model CentroveoTrabajo {
+  id        String            @id @default(cuid())
+  fecha     DateTime
+  tipo      String // CONSULTA | CATARATA | REFRACTIVA
+  cantidad  Int               @default(1)
+  notas     String?
+  facturaId String? // si ya se facturó, apunta a la CentroveoFactura del mes
+  factura   CentroveoFactura? @relation(fields: [facturaId], references: [id])
+  createdAt DateTime          @default(now())
 }
 
 // Facturas de proveedores de Centroveo (compras de lentes, material óptico...)
