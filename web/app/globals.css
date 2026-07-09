@@ -1,0 +1,150 @@
+@import "tailwindcss";
+
+/* ---- Sistema de diseño Lindilla ----
+   Tema claro basado en la paleta del logotipo:
+   negro #16211e · fucsia #e4056f · menta #a5d3c9 · verde teal #4e8f84 */
+:root {
+  --bg: #f6faf8;
+  --bg-soft: #eef5f2;
+  --surface: #ffffff;
+  --surface-2: #f0f6f4;
+  --border: #dce8e4;
+  --border-soft: #e7f0ed;
+  --text: #16211e;
+  --muted: #5b6b66;
+  --muted-2: #8aa19a;
+
+  /* Colores de marca */
+  --brand-pink: #e4056f;
+  --brand-mint: #a5d3c9;
+  --brand-teal: #4e8f84;
+  --brand-teal-dark: #35695f;
+
+  --accent: var(--brand-teal);
+  --accent-soft: rgba(78, 143, 132, 0.14);
+
+  /* Tonos de apoyo (versión legible sobre fondo claro) */
+  --tone-green: #2f7d6d;
+  --tone-amber: #a16207;
+  --tone-rose: var(--brand-pink);
+  --tone-sky: #23606f;
+  --tone-indigo: #8a4f7d;
+}
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Fondo con un degradado sutil en tonos menta de la marca */
+.app-bg {
+  background:
+    radial-gradient(1100px 600px at 100% -10%, rgba(165, 211, 201, 0.25), transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, rgba(228, 5, 111, 0.05), transparent 55%),
+    var(--bg);
+}
+
+/* Tarjetas */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(22, 33, 30, 0.04);
+}
+.card-hover {
+  transition: border-color 0.15s ease, transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.card-hover:hover {
+  border-color: var(--brand-mint);
+  box-shadow: 0 4px 14px rgba(78, 143, 132, 0.12);
+}
+
+/* Texto atenuado */
+.muted { color: var(--muted); }
+.muted-2 { color: var(--muted-2); }
+
+/* Etiquetas de estado */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.badge-dot { width: 7px; height: 7px; border-radius: 999px; }
+
+.badge-green  { background: rgba(78,143,132,.13);  color: #2f7d6d; border-color: rgba(78,143,132,.3); }
+.badge-amber  { background: rgba(161,98,7,.1);     color: #a16207; border-color: rgba(161,98,7,.25); }
+.badge-rose   { background: rgba(228,5,111,.08);   color: #c00560; border-color: rgba(228,5,111,.25); }
+.badge-sky    { background: rgba(35,96,111,.1);    color: #23606f; border-color: rgba(35,96,111,.25); }
+.badge-indigo { background: rgba(138,79,125,.1);   color: #8a4f7d; border-color: rgba(138,79,125,.25); }
+.badge-slate  { background: rgba(100,116,139,.08); color: #64748b; border-color: rgba(100,116,139,.2); }
+
+/* Tablas */
+.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tbl thead th {
+  text-align: left;
+  font-size: 11px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  font-weight: 600;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.tbl tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text);
+}
+.tbl tbody tr { transition: background 0.12s ease; }
+.tbl tbody tr:hover { background: var(--surface-2); }
+.tbl tbody tr:last-child td { border-bottom: none; }
+
+/* Enlaces del menú lateral */
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.nav-link:hover { background: var(--surface-2); color: var(--text); }
+.nav-link.active {
+  background: var(--accent-soft);
+  color: var(--brand-teal-dark);
+}
+.nav-link .ico { width: 20px; height: 20px; flex: none; }
+
+/* Barras del gráfico comparativo */
+.bar-track { background: var(--bg-soft); border-radius: 8px; overflow: hidden; }
+
+/* Impresión: solo la hoja de factura, sin menú ni fondos */
+@media print {
+  aside, .no-print { display: none !important; }
+  body, .app-bg { background: white !important; }
+  main { width: 100% !important; }
+  .factura-hoja { border: none !important; box-shadow: none !important; }
+}

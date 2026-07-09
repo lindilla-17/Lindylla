@@ -1,0 +1,114 @@
+// Modelo de datos de Lindilla S.L. — ERP/CRM
+// Base de datos local en un único archivo (SQLite). Fácil de copiar/respaldar.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// --- CRM: Empresas cliente, con jerarquía matriz -> delegación por país ---
+model Empresa {
+  id           String   @id @default(cuid())
+  nombre       String
+  tipo         String   @default("MATRIZ") // MATRIZ | DELEGACION
+  pais         String?
+  sector       String? // Oftalmología, Cirugía, Clínica...
+  cif          String?
+  email        String?
+  telefono     String?
+  direccion    String?
+  notas        String?
+  carpeta      String? // nombre de su carpeta en "trabajos empresas"
+  parentId     String?
+  parent       Empresa? @relation("Jerarquia", fields: [parentId], references: [id])
+  hijos        Empresa[] @relation("Jerarquia")
+  presupuestos Presupuesto[]
+  facturas     Factura[]
+  createdAt    DateTime @default(now())
+}
+
+// --- Catálogo de productos (flexible: gorros + cualquier otro) ---
+model Producto {
+  id            String   @id @default(cuid())
+  nombre        String
+  categoria     String   @default("GORRO") // GORRO | OTRO
+  descripcion   String?
+  precioBase    Float    @default(0)
+  unidad        String   @default("ud")
+  consumoTelaCm Float? // cm de tela por unidad (para calcular coste de gorros)
+  activo        Boolean  @default(true)
+  lineas        LineaPresupuesto[]
+  createdAt     DateTime @default(now())
+}
+
+// --- Presupuestos: doble vía (pedido de gorros vs congreso) ---
+model Presupuesto {
+  id        String   @id @default(cuid())
+  numero    String   @unique
+  empresaId String
+  empresa   Empresa  @relation(fields: [empresaId], references: [id])
+  tipo      String   @default("GORROS") // GORROS | CONGRESO
+  fecha     DateTime @default(now())
+  estado    String   @default("BORRADOR") // BORRADOR | ENVIADO | ACEPTADO | RECHAZADO
+  notas     String?
+  archivo   String? // nombre del PDF/Excel del presupuesto
+  carpeta   String? // carpeta del pedido en "trabajos empresas"
+  lineas    LineaPresupuesto[]
+  factura   Factura? // si existe -> el pedido está completado
+  createdAt DateTime @default(now())
+}
+
+model LineaPresupuesto {
+  id             String  @id @default(cuid())
+  presupuestoId  String
+  presupuesto    Presupuesto @relation(fields: [presupuestoId], references: [id], onDelete: Cascade)
+  productoId     String?
+  producto       Producto? @relation(fields: [productoId], references: [id])
+  concepto       String
+  categoria      String  @default("PRODUCTO") // PRODUCTO | TRANSPORTE | DIETAS | STAND | PERSONALIZACION | OTRO
+  cantidad       Float   @default(1)
+  precioUnitario Float   @default(0)
+}
+
+// --- Facturas: nacen de un presupuesto. Sin factura = pedido no completado ---
+model Factura {
+  id               String   @id @default(cuid())
+  numero           String   @unique
+  empresaId        String
+  empresa          Empresa  @relation(fields: [empresaId], references: [id])
+  presupuestoId    String?  @unique
+  presupuesto      Presupuesto? @relation(fields: [presupuestoId], references: [id])
+  fecha            DateTime @default(now())
+  fechaVencimiento DateTime?
+  estado           String   @default("PENDIENTE") // PAGADA | PENDIENTE
+  fechaPago        DateTime?
+  neto             Float    @default(0) // base imponible (sin IVA)
+  iva              Float    @default(0) // IVA repercutido (0 en ventas intracomunitarias/exportación)
+  total            Float    @default(0) // neto + iva
+  concepto         String?
+  lineasJson       String? // líneas de la factura en JSON (para las creadas desde la web)
+  archivo          String? // nombre del PDF de la factura (para localizarlo en las carpetas)
+  notas            String?
+  createdAt        DateTime @default(now())
+}
+
+// --- Gastos: dinero a pagar (compras, proveedores, logística de congresos...) ---
+model Gasto {
+  id               String   @id @default(cuid())
+  concepto         String
+  categoria        String   @default("GENERAL") // MATERIAL | PERSONAL | LOGISTICA | CONGRESO | GENERAL
+  proveedor        String?
+  fecha            DateTime @default(now())
+  fechaVencimiento DateTime?
+  neto             Float    @default(0) // base imponible
+  iva              Float    @default(0) // IVA soportado (deducible)
+  importe          Float    @default(0) // total pagado
+  estado           String   @default("PENDIENTE") // PAGADO | PENDIENTE
+  fechaPago        DateTime?
+  archivo          String? // justificante en la carpeta de cuentas
+  createdAt        DateTime @default(now())
+}

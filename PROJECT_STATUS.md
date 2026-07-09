@@ -18,80 +18,84 @@
 > Marca con una **X** la casilla real. Solo una. Si dudas entre dos, elige la MENOR.
 > ¿No sabes qué significa cada una? → lee [docs/ESTADOS_DEL_PROYECTO.md](docs/ESTADOS_DEL_PROYECTO.md)
 
-- [X] 💡 **Idea** — Solo existe la idea en tu cabeza o en notas sueltas.
+- [ ] 💡 **Idea** — Solo existe la idea en tu cabeza o en notas sueltas.
 - [ ] 📄 **Documentación** — Está escrito qué se quiere hacer, pero no hay nada construido.
-- [ ] 🎬 **Demo** — Hay algo que se puede *enseñar*, pero NO sirve para usar de verdad.
+- [X] 🎬 **Demo** — Hay algo que se puede *enseñar*, pero NO sirve para usar de verdad.
 - [ ] 🛠️ **Prototipo funcional** — Funciona en partes, pero no es fiable ni completo.
 - [ ] 🚀 **MVP** — Versión mínima usable por usuarios reales, con lo justo para aportar valor.
 - [ ] 🏭 **Producción** — En uso real, con datos reales y gente dependiendo de ello.
 
-**Estado actual del template recién copiado: 💡 Idea.**
-*(Acabas de copiar la plantilla. Todavía no has construido nada. Esto es normal y correcto.)*
+**Estado actual: 🎬 Demo (local).** Hay una web navegable con diseño oscuro y datos
+de PRUEBA (inventados). Se puede enseñar y se entiende la visión, pero todavía NO
+se pueden meter datos reales desde la interfaz (solo se puede marcar factura
+pagada/pendiente). No hay usuarios ni seguridad todavía.
 
 ---
 
 ## 2. ✅ Qué funciona HOY
 
-> Lista SOLO lo que has probado tú mismo y funciona de verdad.
-> Si no lo has visto funcionar con tus propios ojos, no va aquí.
+> Lista SOLO lo que se ha probado y funciona de verdad (verificado el 08/07/2026).
 
-- _(Todavía nada. Aún no se ha construido nada del proyecto.)_
+- **Web local** en `web/` (Next.js 16 + SQLite). Arranca con `npm run dev` y se ve en `http://localhost:3000`.
+- **6 secciones navegables** con estilo oscuro y visual: Panel, Finanzas, Presupuestos, Facturas, Empresas, Productos.
+- **Panel**: KPIs (beneficio del año, facturado, pendiente de cobro/pago) + comparativa anual + pedidos sin completar.
+- **Finanzas**: rentabilidad por año, comparativa 2024/2025/2026 (gráfico + tabla), ingresos a recibir y gastos a pagar.
+- **Facturas**: listado por fecha + **marcar pagada/pendiente funciona de verdad** (guarda en la base de datos).
+- **Presupuestos**: doble tipo (gorros / congreso) y estado "completado" si tiene factura enlazada.
+- **Empresas**: directorio jerárquico (matriz → delegaciones por país) con volumen facturado.
+- **Productos**: catálogo flexible (gorros + otros) con precio y consumo de tela.
+- Todo con **datos de prueba** realistas (Bausch, STAAR, Johnson, Quirón...) repartidos en 2024-2026.
 
 ---
 
 ## 3. ❌ Qué NO funciona todavía
 
-> Todo lo planeado pero no construido o no fiable. Sé generoso aquí: más vale
-> sobre-listar que dar falsa sensación de avance.
-
-- Todo el producto: aún no se ha empezado a construir.
+- **Crear / editar** empresas, productos, presupuestos, facturas y gastos desde la web (ahora solo se cargan por el script de datos de prueba). Única edición disponible: marcar factura pagada/pendiente.
+- **Datos reales**: aún son inventados. No se han importado los Excel reales.
+- **Generador de presupuestos** (calculadora de consumo de tela, conversión presupuesto→factura automática).
+- **Login / usuarios / permisos**: no hay seguridad; cualquiera con acceso al ordenador lo ve.
+- **Publicación online**: solo funciona en local, no está en internet.
+- **Copias de seguridad automáticas** y gestión documental (logos/plantillas de clientes).
 
 ---
 
 ## 4. 🧪 Cómo probarlo
 
-> Pasos EXACTOS para que cualquiera vea el estado actual con sus propios ojos.
-> Si no se puede probar todavía, dilo claramente.
-
-- _Aún no hay nada que probar. Cuando exista una demo o MVP, Claude pondrá aquí
-  los pasos exactos (qué instalar, qué comando ejecutar, qué deberías ver)._
+1. Abrir una terminal en la carpeta `web/`.
+2. La primera vez: `npm install`, luego `npm run db:push` y `npm run db:seed` (crea y rellena la base de datos de prueba).
+3. Ejecutar `npm run dev`.
+4. Abrir en el navegador `http://localhost:3000`.
+5. Qué deberías ver: el Panel con cifras, y al entrar en **Facturas** podrás pulsar "Marcar pagada" y ver cómo cambia y se actualizan los totales.
 
 ---
 
 ## 5. 🔚 Última decisión tomada
 
-> La decisión más reciente que mueve el proyecto. Con fecha.
-
-- **[fecha]** — _(Aún ninguna. La primera será normalmente "qué vamos a construir".)_
+- **08/07/2026** — Construir la web como **código propio en local** (Next.js + base de datos SQLite en un archivo), en lugar de una plataforma no-code. Motivo: es lo que permite trabajar en local, verlo en el navegador y tener control total. Resuelve la decisión abierta **O1** del SYSTEM_VISION.
 
 ---
 
 ## 6. ⏭️ Próxima decisión necesaria
 
-> Qué hay que decidir AHORA para poder avanzar. Quién la decide.
-
-- **Definir qué es el proyecto** → rellenar [SYSTEM_VISION.md](SYSTEM_VISION.md). Decide: tú.
+- **¿Empezamos a poder meter/editar datos reales desde la web** (formularios de alta), o **primero pulimos el diseño y qué información se muestra**? Decide: tú.
 
 ---
 
 ## 7. ⚠️ Riesgos abiertos
 
-> Cosas que podrían salir mal: dependencias de terceros, datos sensibles,
-> decisiones sin cerrar, plazos, costes. Sin esconder nada.
-
-- _(Ninguno registrado todavía. Claude irá añadiendo riesgos según aparezcan.)_
+- **Datos de prueba vs reales**: no confundir las cifras actuales (inventadas) con la contabilidad real.
+- **Sin seguridad todavía**: no meter datos reales sensibles hasta que haya login, y no publicar online sin auditar antes.
+- **Migración de Excel** (decisión O2/O3 del SYSTEM_VISION): pendiente de definir cómo se cargan clientes, tarifas y >25 GB de recursos gráficos.
 
 ---
 
 ## 8. 🎯 Nivel de confianza del estado actual
 
-> ¿Cómo de seguro estás de que lo descrito arriba es verdad?
-
-- [ ] 🟢 **Alto** — Lo he probado y estoy seguro de que funciona como digo.
-- [ ] 🟡 **Medio** — Funciona, pero no lo he probado a fondo o hay zonas grises.
-- [X] 🔴 **Bajo** — Recién empezado / sin probar / mucha incertidumbre todavía.
+- [X] 🟢 **Alto** — Lo he probado (las 6 páginas cargan sin errores y la acción de marcar pagada funciona).
+- [ ] 🟡 **Medio**
+- [ ] 🔴 **Bajo**
 
 ---
 
-*Última actualización: [fecha] por [nombre]*
+*Última actualización: 08/07/2026 por Claude (validar con Dirección Lindilla S.L.).*
 *Mantiene: Claude (con validación del dueño del proyecto).*
