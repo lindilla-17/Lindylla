@@ -43,6 +43,17 @@ export function Sidebar() {
             </Link>
           );
         })}
+
+        {/* Centroveo: actividad sanitaria, gestión independiente */}
+        <div className="mt-3 pt-3 border-t border-[var(--border-soft)]">
+          <div className="muted-2 text-[11px] font-semibold uppercase tracking-wide px-3 mb-1">Actividad sanitaria</div>
+          <Link href="/centroveo" className={`nav-link ${pathname.startsWith("/centroveo") ? "active" : ""}`}>
+            <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z M12 15a3 3 0 100-6 3 3 0 000 6z" />
+            </svg>
+            Centroveo
+          </Link>
+        </div>
       </nav>
 
       {/* Pie */}

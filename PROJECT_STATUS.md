@@ -20,38 +20,37 @@
 
 - [ ] 💡 **Idea** — Solo existe la idea en tu cabeza o en notas sueltas.
 - [ ] 📄 **Documentación** — Está escrito qué se quiere hacer, pero no hay nada construido.
-- [X] 🎬 **Demo** — Hay algo que se puede *enseñar*, pero NO sirve para usar de verdad.
-- [ ] 🛠️ **Prototipo funcional** — Funciona en partes, pero no es fiable ni completo.
+- [ ] 🎬 **Demo** — Hay algo que se puede *enseñar*, pero NO sirve para usar de verdad.
+- [X] 🛠️ **Prototipo funcional** — Funciona en partes, pero no es fiable ni completo.
 - [ ] 🚀 **MVP** — Versión mínima usable por usuarios reales, con lo justo para aportar valor.
 - [ ] 🏭 **Producción** — En uso real, con datos reales y gente dependiendo de ello.
 
-**Estado actual: 🎬 Demo (local).** Hay una web navegable con diseño oscuro y datos
-de PRUEBA (inventados). Se puede enseñar y se entiende la visión, pero todavía NO
-se pueden meter datos reales desde la interfaz (solo se puede marcar factura
-pagada/pendiente). No hay usuarios ni seguridad todavía.
+**Estado actual: 🛠️ Prototipo funcional (local).** La web carga DATOS REALES
+extraídos de los PDFs de cuentas (facturas, presupuestos y gastos 2023-2026),
+se pueden crear/editar/borrar facturas desde la interfaz y hay una segunda
+actividad (Centroveo, sanitaria) con gestión separada. Sigue siendo local,
+sin usuarios ni seguridad, y quedan huecos (ver sección 3).
 
 ---
 
 ## 2. ✅ Qué funciona HOY
 
-> Lista SOLO lo que se ha probado y funciona de verdad (verificado el 08/07/2026).
+> Lista SOLO lo que se ha probado y funciona de verdad (verificado el 09/07/2026).
 
 - **Web local** en `web/` (Next.js 16 + SQLite). Arranca con `npm run dev` y se ve en `http://localhost:3000`.
-- **6 secciones navegables** con estilo oscuro y visual: Panel, Finanzas, Presupuestos, Facturas, Empresas, Productos.
-- **Panel**: KPIs (beneficio del año, facturado, pendiente de cobro/pago) + comparativa anual + pedidos sin completar.
-- **Finanzas**: rentabilidad por año, comparativa 2024/2025/2026 (gráfico + tabla), ingresos a recibir y gastos a pagar.
-- **Facturas**: listado por fecha + **marcar pagada/pendiente funciona de verdad** (guarda en la base de datos).
-- **Presupuestos**: doble tipo (gorros / congreso) y estado "completado" si tiene factura enlazada.
-- **Empresas**: directorio jerárquico (matriz → delegaciones por país) con volumen facturado.
-- **Productos**: catálogo flexible (gorros + otros) con precio y consumo de tela.
-- Todo con **datos de prueba** realistas (Bausch, STAAR, Johnson, Quirón...) repartidos en 2024-2026.
+- **DATOS REALES**: 45 facturas, 40 presupuestos y 205 gastos extraídos de los PDFs de `Lindilla\cuentas` (2023-2026), cargados con `npx prisma db seed`. Exclusiones acordadas con Mercedes (coche, comisiones Amazon 2023, gastos personales) documentadas en `gastos-reales.json` (_pendientes).
+- **Panel**: KPIs reales (beneficio del año, facturado, pendiente de cobro/pago) + comparativa anual + pedidos sin completar + **columna Centroveo** a la derecha.
+- **Finanzas**: rentabilidad real por año (2023-2026), ingresos a recibir y gastos a pagar.
+- **Facturas**: listado por año con ordenación, **crear desde la web** (numeración automática), editar, borrar, marcar pagada/pendiente e **imprimir con la plantilla de Lindilla**.
+- **Presupuestos / Empresas / Productos / Gorros**: navegables con datos reales.
+- **Centroveo (actividad sanitaria, NUEVO 09/07/2026)**: sección independiente con panel propio y 3 apartados — facturas emitidas (lentes de contacto, IVA 10%), facturas de proveedores y facturas de trabajos profesionales (optometría en Vithas Xanit, exentas de IVA). Crear, marcar cobrada/pagado y borrar funcionan y guardan en tablas separadas: sus datos NO se mezclan con la actividad de gorros.
 
 ---
 
 ## 3. ❌ Qué NO funciona todavía
 
-- **Crear / editar** empresas, productos, presupuestos, facturas y gastos desde la web (ahora solo se cargan por el script de datos de prueba). Única edición disponible: marcar factura pagada/pendiente.
-- **Datos reales**: aún son inventados. No se han importado los Excel reales.
+- **Crear / editar** empresas, productos y presupuestos desde la web (facturas de gorros sí; los gastos de gorros solo se cargan por el script de datos).
+- **Centroveo**: no tiene edición de facturas ya creadas (solo crear/borrar/marcar estado), ni impresión con plantilla, ni datos históricos cargados (empieza vacío).
 - **Generador de presupuestos** (calculadora de consumo de tela, conversión presupuesto→factura automática).
 - **Login / usuarios / permisos**: no hay seguridad; cualquiera con acceso al ordenador lo ve.
 - **Publicación online**: solo funciona en local, no está en internet.

@@ -38,7 +38,20 @@ export default async function DashboardPage() {
   const totalLinea = (lineas: { cantidad: number; precioUnitario: number }[]) =>
     lineas.reduce((s, l) => s + l.cantidad * l.precioUnitario, 0);
 
+  // --- Centroveo (actividad sanitaria, columna derecha; datos independientes) ---
+  const [cvFacturas, cvGastos] = await Promise.all([
+    prisma.centroveoFactura.findMany(),
+    prisma.centroveoGasto.findMany(),
+  ]);
+  const cvAno = cvFacturas.filter((f) => f.fecha.getFullYear() === year);
+  const cvLentes = cvAno.filter((f) => f.tipo === "LENTES").reduce((s, f) => s + f.neto, 0);
+  const cvServicios = cvAno.filter((f) => f.tipo === "PROFESIONAL").reduce((s, f) => s + f.neto, 0);
+  const cvGastosAno = cvGastos.filter((g) => g.fecha.getFullYear() === year).reduce((s, g) => s + g.neto, 0);
+  const cvPendiente = cvFacturas.filter((f) => f.estado === "PENDIENTE").reduce((s, f) => s + f.total, 0);
+
   return (
+    <div className="flex flex-col xl:flex-row items-stretch">
+      <div className="flex-1 min-w-0">
     <Page>
       <PageHeader
         title="Panel de control"
@@ -168,5 +181,66 @@ export default async function DashboardPage() {
         </Panel>
       </div>
     </Page>
+      </div>
+
+      {/* ============================================================
+          CENTROVEO — actividad sanitaria de Lindilla S.L.
+          Columna independiente: misma web, gestión y datos separados
+          de la actividad de gorros.
+          ============================================================ */}
+      <aside className="w-full xl:w-[320px] flex-none border-t xl:border-t-0 xl:border-l border-[var(--border)] bg-[var(--bg-soft)] px-6 py-7">
+        <div className="mb-5">
+          <h2 className="text-[20px] font-semibold tracking-tight">Centroveo</h2>
+          <p className="muted text-[13px] mt-1">
+            Actividad sanitaria · óptica y optometría.
+            <br />
+            Gestión independiente de los gorros.
+          </p>
+        </div>
+
+        {/* Mini-resumen del año */}
+        <div className="grid grid-cols-2 xl:grid-cols-1 gap-3 mb-5">
+          <MiniStat label={`Venta de lentes ${year}`} value={euro(cvLentes)} sub="IVA 10%" />
+          <MiniStat label={`Servicios optometría ${year}`} value={euro(cvServicios)} sub="Vithas Xanit · exentas de IVA" />
+          <MiniStat label={`Gastos proveedores ${year}`} value={euro(cvGastosAno)} />
+          <MiniStat label="Pendiente de cobro" value={euro(cvPendiente)} />
+        </div>
+
+        {/* Apartados */}
+        <nav className="flex flex-col gap-2">
+          <CentroveoLink href="/centroveo/emitidas" titulo="Facturas emitidas" detalle="Lentes de contacto · IVA 10%" />
+          <CentroveoLink href="/centroveo/proveedores" titulo="Facturas de proveedores" detalle="Compras de la actividad" />
+          <CentroveoLink href="/centroveo/profesionales" titulo="Facturas de trabajos profesionales" detalle="Optometría · exentas de IVA" />
+        </nav>
+
+        <Link
+          href="/centroveo"
+          className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[var(--accent-soft)] border border-[rgba(78,143,132,.3)] text-[var(--brand-teal-dark)] px-3.5 py-2 text-[13px] font-medium hover:bg-[rgba(78,143,132,.22)] transition-colors"
+        >
+          Abrir panel Centroveo →
+        </Link>
+      </aside>
+    </div>
+  );
+}
+
+/* Tarjeta pequeña de la columna Centroveo */
+function MiniStat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div className="card p-3.5">
+      <div className="muted text-[12px] font-medium">{label}</div>
+      <div className="text-[18px] font-semibold tracking-tight mt-1">{value}</div>
+      {sub && <div className="muted-2 text-[11px] mt-0.5">{sub}</div>}
+    </div>
+  );
+}
+
+/* Enlace a un apartado de Centroveo */
+function CentroveoLink({ href, titulo, detalle }: { href: string; titulo: string; detalle: string }) {
+  return (
+    <Link href={href} className="card card-hover px-4 py-3 block">
+      <div className="text-[14px] font-medium">{titulo}</div>
+      <div className="muted-2 text-[12px] mt-0.5">{detalle}</div>
+    </Link>
   );
 }

@@ -96,6 +96,49 @@ model Factura {
   createdAt        DateTime @default(now())
 }
 
+// ============================================================
+// CENTROVEO — actividad sanitaria de Lindilla S.L. (óptica/optometría)
+// Gestión TOTALMENTE independiente de la actividad de gorros:
+// sus datos viven en estas tablas y no se mezclan con las de arriba.
+// ============================================================
+
+// Facturas emitidas por Centroveo. Dos tipos de facturación:
+//  - LENTES: venta de lentes de contacto, IVA 10%
+//  - PROFESIONAL: servicios de optometría (Hospital Vithas Xanit),
+//    exentos de IVA por ser servicios sanitarios (art. 20 LIVA)
+model CentroveoFactura {
+  id        String    @id @default(cuid())
+  numero    String    @unique
+  tipo      String    @default("LENTES") // LENTES | PROFESIONAL
+  cliente   String
+  concepto  String?
+  fecha     DateTime  @default(now())
+  estado    String    @default("PENDIENTE") // PAGADA | PENDIENTE
+  fechaPago DateTime?
+  neto      Float     @default(0)
+  iva       Float     @default(0) // 10% en lentes; 0 en servicios sanitarios exentos
+  total     Float     @default(0)
+  archivo   String?
+  notas     String?
+  createdAt DateTime  @default(now())
+}
+
+// Facturas de proveedores de Centroveo (compras de lentes, material óptico...)
+model CentroveoGasto {
+  id        String    @id @default(cuid())
+  proveedor String
+  concepto  String
+  fecha     DateTime  @default(now())
+  neto      Float     @default(0)
+  iva       Float     @default(0)
+  importe   Float     @default(0)
+  estado    String    @default("PENDIENTE") // PAGADO | PENDIENTE
+  fechaPago DateTime?
+  archivo   String?
+  notas     String?
+  createdAt DateTime  @default(now())
+}
+
 // --- Gastos: dinero a pagar (compras, proveedores, logística de congresos...) ---
 model Gasto {
   id               String   @id @default(cuid())
