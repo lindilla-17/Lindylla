@@ -3,6 +3,7 @@ import { euro } from "@/lib/format";
 import { Page, PageHeader, Panel } from "@/components/ui";
 import { asegurarActividades, asegurarConfig } from "../actions";
 import { ApuntarTrabajoForm, BorrarTrabajoBtn, FacturarMesBtn } from "@/components/AgendaTrabajo";
+import { AgendaNav } from "@/components/AgendaNav";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -85,9 +86,8 @@ export default async function AgendaPage({
   ];
   while (celdas.length % 7 !== 0) celdas.push(null);
 
-  const prevMes = mes === 1 ? `${anio - 1}-12` : `${anio}-${dosDig(mes - 1)}`;
-  const nextMes = mes === 12 ? `${anio + 1}-01` : `${anio}-${dosDig(mes + 1)}`;
   const nombreMes = primero.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+  const esMesFuturo = primero > new Date(hoy.getFullYear(), hoy.getMonth(), 1);
 
   const delDia = trabajos.filter((t) => ymd(t.fecha) === diaSel);
   const fechaSelLarga = new Date(`${diaSel}T12:00:00`).toLocaleDateString("es-ES", {
@@ -108,17 +108,17 @@ export default async function AgendaPage({
         </Link>
       </div>
 
+      {esMesFuturo && (
+        <div className="mb-4 rounded-lg bg-[var(--accent-soft)] border border-[rgba(78,143,132,.3)] px-4 py-2.5 text-[13px] text-[var(--brand-teal-dark)]">
+          📅 Estás planificando un <b>mes futuro</b>. Puedes ir apuntando citas por adelantado; podrás facturarlo cuando llegue el momento.
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5 items-start">
         {/* Calendario */}
         <Panel
           title={nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1)}
-          right={
-            <div className="flex items-center gap-1">
-              <Link href={`/centroveo/agenda?mes=${prevMes}`} className="px-2.5 py-1 rounded-lg border border-[var(--border)] muted hover:bg-[var(--surface-2)] text-[14px]">←</Link>
-              <Link href="/centroveo/agenda" className="px-3 py-1 rounded-lg border border-[var(--border)] muted hover:bg-[var(--surface-2)] text-[12px]">Hoy</Link>
-              <Link href={`/centroveo/agenda?mes=${nextMes}`} className="px-2.5 py-1 rounded-lg border border-[var(--border)] muted hover:bg-[var(--surface-2)] text-[14px]">→</Link>
-            </div>
-          }
+          right={<AgendaNav mes={mesStr} />}
         >
           <div className="p-3 sm:p-4">
             <div className="grid grid-cols-7 gap-1 sm:gap-1.5 mb-1.5">
