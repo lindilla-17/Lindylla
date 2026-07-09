@@ -15,7 +15,11 @@ export const dynamic = "force-dynamic";
 function logoCentroveo(): string | null {
   const dir = path.join(process.cwd(), "public");
   for (const ext of ["png", "jpg", "jpeg", "svg", "webp"]) {
-    if (fs.existsSync(path.join(dir, `centroveo.${ext}`))) return `/centroveo.${ext}`;
+    const f = path.join(dir, `centroveo.${ext}`);
+    if (fs.existsSync(f)) {
+      // ?v=<fecha del archivo> evita que el navegador muestre una versión antigua en caché
+      return `/centroveo.${ext}?v=${Math.floor(fs.statSync(f).mtimeMs)}`;
+    }
   }
   return null;
 }
@@ -203,18 +207,14 @@ export default async function DashboardPage() {
       <aside className="w-full xl:w-[320px] flex-none border-t xl:border-t-0 xl:border-l border-[var(--border)] bg-[var(--side)] px-6 py-7">
         <div className="mb-5">
           {logoCentroveo() ? (
-            <Link href="/centroveo" className="flex items-center gap-3">
+            <Link href="/centroveo" className="block">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={logoCentroveo()!} alt="Centroveo" className="h-14 w-auto" />
-              <div>
-                <div className="font-semibold text-[17px] leading-tight">Centroveo</div>
-                <div className="muted-2 text-[12px] leading-tight">Actividad sanitaria</div>
-              </div>
+              <img src={logoCentroveo()!} alt="Centroveo · Visión y Entrenamiento Ocular" className="h-16 w-auto" />
             </Link>
           ) : (
             <h2 className="text-[20px] font-semibold tracking-tight">Centroveo</h2>
           )}
-          <p className="muted text-[13px] mt-2">
+          <p className="muted text-[13px] mt-3">
             Actividad sanitaria · óptica y optometría.
             <br />
             Gestión independiente de los gorros.
