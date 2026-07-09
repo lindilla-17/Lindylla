@@ -153,6 +153,31 @@ export async function eliminarCentroveoGasto(id: string) {
 // AGENDA de trabajo profesional (calendario → facturas profesionales)
 // ============================================================
 
+// Asegura que existe la fila de configuración (complemento mensual)
+export async function asegurarConfig() {
+  await prisma.centroveoConfig.upsert({
+    where: { id: "config" },
+    create: { id: "config" },
+    update: {},
+  });
+}
+
+// Guarda el complemento fijo que se suma a cada factura mensual (ej. autónomos)
+export async function guardarComplemento(input: {
+  importe: number;
+  concepto: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const importe = Math.max(0, Math.round((input.importe || 0) * 100) / 100);
+  const concepto = input.concepto.trim() || "Complemento mensual";
+  await prisma.centroveoConfig.upsert({
+    where: { id: "config" },
+    create: { id: "config", complementoMensual: importe, complementoConcepto: concepto },
+    update: { complementoMensual: importe, complementoConcepto: concepto },
+  });
+  refrescar();
+  return { ok: true };
+}
+
 // Crea las actividades por defecto la primera vez (si no hay ninguna)
 export async function asegurarActividades() {
   const n = await prisma.centroveoActividad.count();
@@ -307,8 +332,16 @@ export async function facturarMes(
     return { ok: false, error: "Los precios de las actividades facturables están a 0 €. Ponlos antes de facturar el mes." };
   }
 
-  const neto = Math.round([...grupos.values()].reduce((s, g) => s + g.uds * g.precio, 0) * 100) / 100;
-  const partes = [...grupos.values()].map((g) => `${g.uds} × ${g.nombre}`).join(", ");
+  const netoTrabajos = Math.round([...grupos.values()].reduce((s, g) => s + g.uds * g.precio, 0) * 100) / 100;
+
+  // Complemento fijo mensual (ej. cuota de autónomos) que se suma a la factura
+  const config = await prisma.centroveoConfig.findUnique({ where: { id: "config" } });
+  const complemento = config?.complementoMensual ?? 0;
+  const complementoConcepto = config?.complementoConcepto || "Complemento mensual";
+
+  const neto = Math.round((netoTrabajos + complemento) * 100) / 100;
+  let partes = [...grupos.values()].map((g) => `${g.uds} × ${g.nombre}`).join(", ");
+  if (complemento > 0) partes += ` + ${complementoConcepto}`;
   const nombreMes = desde.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
   const numero = await siguienteNumeroCentroveo();
 

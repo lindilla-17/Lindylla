@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { euro } from "@/lib/format";
 import { Page, PageHeader, Panel } from "@/components/ui";
-import { asegurarActividades } from "../actions";
+import { asegurarActividades, asegurarConfig } from "../actions";
 import { ApuntarTrabajoForm, BorrarTrabajoBtn, FacturarMesBtn } from "@/components/AgendaTrabajo";
 import Link from "next/link";
 
@@ -17,12 +17,16 @@ export default async function AgendaPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   await asegurarActividades();
+  await asegurarConfig();
   const params = await searchParams;
   const hoy = new Date();
 
-  const [actividades, ] = await Promise.all([
+  const [actividades, config] = await Promise.all([
     prisma.centroveoActividad.findMany({ orderBy: { orden: "asc" } }),
+    prisma.centroveoConfig.findUnique({ where: { id: "config" } }),
   ]);
+  const complemento = config?.complementoMensual ?? 0;
+  const complementoConcepto = config?.complementoConcepto || "Complemento mensual";
   const activas = actividades.filter((a) => a.activa);
   const colorDe = (id: string) => actividades.find((a) => a.id === id)?.color ?? "#94a3b8";
   const nombreDe = (id: string) => actividades.find((a) => a.id === id)?.nombre ?? "—";
@@ -66,10 +70,12 @@ export default async function AgendaPage({
   }
   // Actividades a mostrar en el resumen: las que tienen trabajo este mes + las activas
   const idsResumen = [...new Set([...actividades.filter((a) => a.activa).map((a) => a.id), ...Object.keys(totMes)])];
-  const importePend = Object.entries(totPend).reduce(
+  const importeTrabajos = Object.entries(totPend).reduce(
     (s, [id, uds]) => s + (facturableDe(id) ? uds * precioDe(id) : 0), 0
   );
   const hayPendienteFacturable = Object.entries(totPend).some(([id, uds]) => facturableDe(id) && uds > 0);
+  // El complemento fijo (autónomos) se suma a la factura del mes cuando hay trabajo facturable
+  const importePend = importeTrabajos + (hayPendienteFacturable ? complemento : 0);
 
   // Rejilla del calendario (lunes primero)
   const offset = (primero.getDay() + 6) % 7;
@@ -233,6 +239,15 @@ export default async function AgendaPage({
                     </span>
                   </div>
                 ))
+              )}
+              {complemento > 0 && hayPendienteFacturable && (
+                <div className="flex items-center justify-between text-[14px]">
+                  <span className="muted flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[var(--brand-teal-dark)]" />
+                    {complementoConcepto}
+                  </span>
+                  <span className="font-medium">{euro(complemento)}<span className="muted-2 text-[12px]"> /mes</span></span>
+                </div>
               )}
               <div className="flex items-center justify-between pt-3 border-t border-[var(--border-soft)]">
                 <span className="text-[14px] font-semibold">Pendiente de facturar</span>

@@ -140,6 +140,14 @@ model CentroveoActividad {
   createdAt  DateTime           @default(now())
 }
 
+// Configuración de Centroveo (fila única). Guarda el complemento fijo
+// que se suma a cada factura mensual de trabajos profesionales (ej. autónomos).
+model CentroveoConfig {
+  id                  String @id @default("config")
+  complementoMensual  Float  @default(0)
+  complementoConcepto String @default("Cuota de autónomos")
+}
+
 // Agenda de trabajo profesional: cada apunte es el trabajo de un día
 // (nº de una actividad). Al facturar el mes se enlaza a una factura.
 model CentroveoTrabajo {
