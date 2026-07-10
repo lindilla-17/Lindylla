@@ -1,4 +1,4 @@
-# Despliegue de Lindilla a producción (Vercel + Neon)
+# Despliegue de Lindilla a producción (Vercel + Supabase)
 
 Guía práctica del montaje. Objetivo:
 
@@ -6,8 +6,10 @@ Guía práctica del montaje. Objetivo:
 - **Desarrollo (localhost)**: tu ordenador, con una base de datos aparte para trastear
   sin tocar los datos reales.
 
-Ambos entornos usan **PostgreSQL en Neon** (gratis). El código es el mismo; lo único que
-cambia es a qué base de datos apunta cada uno (variable `DATABASE_URL`).
+Ambos entornos usan **PostgreSQL en Supabase** (gratis). El código es el mismo; lo único
+que cambia es a qué base de datos apunta cada uno (variables `DATABASE_URL` / `DIRECT_URL`).
+
+Se usan dos proyectos de Supabase: uno **prod** y uno **dev** (el plan gratis permite 2).
 
 ---
 
@@ -16,8 +18,11 @@ cambia es a qué base de datos apunta cada uno (variable `DATABASE_URL`).
 | Pieza | Para qué | Cuenta |
 |-------|----------|--------|
 | GitHub | Guarda el código (ya existe: `lindilla-17/Lindylla`) | ya la tienes |
-| Neon | Base de datos en la nube (prod + dev) | crear |
+| Supabase | Base de datos en la nube — 2 proyectos (prod + dev) | crear |
 | Vercel | Publica la web y la conecta a GitHub | crear |
+
+Supabase da **dos** cadenas por proyecto: `DATABASE_URL` (pooler, 6543, para la web) y
+`DIRECT_URL` (5432, para preparar la base de datos).
 
 En Vercel, el proyecto apunta a la subcarpeta **`web`** (Root Directory = `web`).
 
