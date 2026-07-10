@@ -1,0 +1,81 @@
+{
+  "_comentario": "Config de Centroveo para sembrar en cualquier entorno (dev/prod). Generado el 2026-07-10",
+  "actividades": [
+    {
+      "nombre": "Consulta",
+      "color": "#2563eb",
+      "facturable": true,
+      "precio": 60,
+      "marcaDia": false,
+      "orden": 0,
+      "activa": true
+    },
+    {
+      "nombre": "Cirugía de cataratas",
+      "color": "#e4056f",
+      "facturable": true,
+      "precio": 30,
+      "marcaDia": false,
+      "orden": 1,
+      "activa": true
+    },
+    {
+      "nombre": "Cirugía refractiva",
+      "color": "#d97706",
+      "facturable": true,
+      "precio": 55,
+      "marcaDia": false,
+      "orden": 2,
+      "activa": true
+    },
+    {
+      "nombre": "Peluquería",
+      "color": "#7c3aed",
+      "facturable": false,
+      "precio": 0,
+      "marcaDia": false,
+      "orden": 3,
+      "activa": true
+    },
+    {
+      "nombre": "Cara",
+      "color": "#0891b2",
+      "facturable": false,
+      "precio": 0,
+      "marcaDia": false,
+      "orden": 4,
+      "activa": true
+    },
+    {
+      "nombre": "Uñas",
+      "color": "#f472b6",
+      "facturable": false,
+      "precio": 0,
+      "marcaDia": false,
+      "orden": 5,
+      "activa": true
+    },
+    {
+      "nombre": "Varios",
+      "color": "#ca8a04",
+      "facturable": false,
+      "precio": 0,
+      "marcaDia": false,
+      "orden": 6,
+      "activa": true
+    },
+    {
+      "nombre": "Vacaciones",
+      "color": "#16a34a",
+      "facturable": false,
+      "precio": 0,
+      "marcaDia": true,
+      "orden": 7,
+      "activa": true
+    }
+  ],
+  "config": {
+    "complementoMensual": 300,
+    "complementoConcepto": "Cuota de autónomos"
+  }
+}

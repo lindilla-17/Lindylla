@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import facturasReales from "./facturas-reales.json";
 import presupuestosReales from "./presupuestos-reales.json";
 import gastosReales from "./gastos-reales.json";
+import centroveoConfig from "./centroveo-config.json";
 
 const prisma = new PrismaClient();
 
@@ -163,7 +164,29 @@ async function main() {
     gastosCreados++;
   }
 
-  console.log(`✅ Datos reales cargados: ${creadas} facturas, ${presCreados} presupuestos, ${gastosCreados} gastos, ${empresas.length} empresas.`);
+  // --- Centroveo (actividad sanitaria) ---
+  // Sembramos actividades y complemento SIN borrar apuntes ni facturas ya creados
+  // (upsert por nombre / fila única). Así prod arranca con las actividades y precios
+  // configurados, y en dev no se pierde nada.
+  console.log("Configurando actividades de Centroveo (agenda)...");
+  for (const a of centroveoConfig.actividades) {
+    const existe = await prisma.centroveoActividad.findFirst({ where: { nombre: a.nombre } });
+    if (existe) {
+      await prisma.centroveoActividad.update({
+        where: { id: existe.id },
+        data: { color: a.color, facturable: a.facturable, precio: a.precio, marcaDia: a.marcaDia, orden: a.orden, activa: a.activa },
+      });
+    } else {
+      await prisma.centroveoActividad.create({ data: a });
+    }
+  }
+  await prisma.centroveoConfig.upsert({
+    where: { id: "config" },
+    create: { id: "config", complementoMensual: centroveoConfig.config.complementoMensual, complementoConcepto: centroveoConfig.config.complementoConcepto },
+    update: { complementoMensual: centroveoConfig.config.complementoMensual, complementoConcepto: centroveoConfig.config.complementoConcepto },
+  });
+
+  console.log(`✅ Datos reales cargados: ${creadas} facturas, ${presCreados} presupuestos, ${gastosCreados} gastos, ${empresas.length} empresas, ${centroveoConfig.actividades.length} actividades Centroveo.`);
   console.log("ℹ️ Gastos registrados: 2026, 2025, 2024 y 2023 (gastos reales de material, confección, mercería, importaciones, canal Amazon...). Excluidos por decisión de Mercedes: comisiones Amazon 2023 (2024 sí se mantiene), compra del coche Flexicar (falta desglose de IVA), y varios gastos personales/no deducibles. Detalle en gastos-reales.json (_pendientes).");
 }
 
