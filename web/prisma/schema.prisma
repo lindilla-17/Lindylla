@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // pooler transaction (6543) — la web en marcha
+  directUrl = env("DIRECT_URL") // pooler session (5432) — migraciones / db push
 }
 
 // --- CRM: Empresas cliente, con jerarquía matriz -> delegación por país ---

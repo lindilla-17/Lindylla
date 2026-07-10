@@ -43,3 +43,6 @@ next-env.d.ts
 # base de datos local (se regenera con: npm run db:push && npm run db:seed)
 prisma/*.db
 prisma/*.db-journal
+
+# log local del servidor de desarrollo
+.devlog.txt
