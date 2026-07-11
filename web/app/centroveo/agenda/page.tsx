@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { euro } from "@/lib/format";
 import { Page, PageHeader, Panel } from "@/components/ui";
-import { asegurarActividades, asegurarConfig } from "../actions";
+import { asegurarActividades } from "../actions";
 import { ApuntarTrabajoForm, BorrarTrabajoBtn, FacturarMesBtn } from "@/components/AgendaTrabajo";
 import { AgendaNav } from "@/components/AgendaNav";
 import Link from "next/link";
@@ -17,15 +17,33 @@ export default async function AgendaPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  await asegurarActividades();
-  await asegurarConfig();
   const params = await searchParams;
   const hoy = new Date();
 
-  const [actividades, config] = await Promise.all([
+  // Fechas primero (sin base de datos)
+  const mesParam = typeof params.mes === "string" && /^\d{4}-\d{2}$/.test(params.mes) ? params.mes : null;
+  const [anio, mes] = (mesParam ?? `${hoy.getFullYear()}-${dosDig(hoy.getMonth() + 1)}`).split("-").map(Number);
+  const mesStr = `${anio}-${dosDig(mes)}`;
+  const primero = new Date(anio, mes - 1, 1);
+  const finMes = new Date(anio, mes, 1);
+  const diasEnMes = new Date(anio, mes, 0).getDate();
+
+  const diaParam = typeof params.dia === "string" && /^\d{4}-\d{2}-\d{2}$/.test(params.dia) ? params.dia : null;
+  const esMesActual = anio === hoy.getFullYear() && mes === hoy.getMonth() + 1;
+  const diaSel = diaParam ?? (esMesActual ? ymd(hoy) : `${mesStr}-01`);
+
+  // Todas las consultas a la base de datos en UNA sola tanda en paralelo (más rápido)
+  let [actividades, config, trabajos] = await Promise.all([
     prisma.centroveoActividad.findMany({ orderBy: { orden: "asc" } }),
     prisma.centroveoConfig.findUnique({ where: { id: "config" } }),
+    prisma.centroveoTrabajo.findMany({ where: { fecha: { gte: primero, lt: finMes } }, orderBy: { createdAt: "asc" } }),
   ]);
+  // Solo la primera vez (base recién creada): crear las actividades por defecto
+  if (actividades.length === 0) {
+    await asegurarActividades();
+    actividades = await prisma.centroveoActividad.findMany({ orderBy: { orden: "asc" } });
+  }
+
   const complemento = config?.complementoMensual ?? 0;
   const complementoConcepto = config?.complementoConcepto || "Complemento mensual";
   const activas = actividades.filter((a) => a.activa);
@@ -35,25 +53,6 @@ export default async function AgendaPage({
   const precioDe = (id: string) => actividades.find((a) => a.id === id)?.precio ?? 0;
   const marcaDiaDe = (id: string) => actividades.find((a) => a.id === id)?.marcaDia ?? false;
   const hayPrecios = actividades.some((a) => a.facturable && a.precio > 0);
-
-  // Mes visible (?mes=YYYY-MM); por defecto el actual
-  const mesParam = typeof params.mes === "string" && /^\d{4}-\d{2}$/.test(params.mes) ? params.mes : null;
-  const [anio, mes] = (mesParam ?? `${hoy.getFullYear()}-${dosDig(hoy.getMonth() + 1)}`).split("-").map(Number);
-  const mesStr = `${anio}-${dosDig(mes)}`;
-  const primero = new Date(anio, mes - 1, 1);
-  const finMes = new Date(anio, mes, 1);
-  const diasEnMes = new Date(anio, mes, 0).getDate();
-
-  // Día seleccionado (?dia=YYYY-MM-DD); por defecto hoy si estamos en el mes en curso, si no el día 1
-  const diaParam = typeof params.dia === "string" && /^\d{4}-\d{2}-\d{2}$/.test(params.dia) ? params.dia : null;
-  const esMesActual = anio === hoy.getFullYear() && mes === hoy.getMonth() + 1;
-  const diaSel = diaParam ?? (esMesActual ? ymd(hoy) : `${mesStr}-01`);
-
-  // Trabajo del mes
-  const trabajos = await prisma.centroveoTrabajo.findMany({
-    where: { fecha: { gte: primero, lt: finMes } },
-    orderBy: { createdAt: "asc" },
-  });
 
   // Índice por día y por actividad
   const porDia: Record<string, Record<string, number>> = {};

@@ -9,12 +9,18 @@ export const dynamic = "force-dynamic";
 
 // Gestión de las actividades de la agenda: nombre, color, si es facturable y precio.
 export default async function ActividadesPage() {
-  await asegurarActividades();
-  await asegurarConfig();
-  const [actividades, config] = await Promise.all([
+  let [actividades, config] = await Promise.all([
     prisma.centroveoActividad.findMany({ orderBy: { orden: "asc" } }),
     prisma.centroveoConfig.findUnique({ where: { id: "config" } }),
   ]);
+  // Primera vez (base recién creada): crear defaults
+  if (actividades.length === 0 || !config) {
+    await Promise.all([asegurarActividades(), asegurarConfig()]);
+    [actividades, config] = await Promise.all([
+      prisma.centroveoActividad.findMany({ orderBy: { orden: "asc" } }),
+      prisma.centroveoConfig.findUnique({ where: { id: "config" } }),
+    ]);
+  }
 
   return (
     <Page>
