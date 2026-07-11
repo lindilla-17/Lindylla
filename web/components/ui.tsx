@@ -24,7 +24,7 @@ export function PageHeader({
 
 /* Contenedor de página con padding estándar */
 export function Page({ children }: { children: React.ReactNode }) {
-  return <div className="px-8 py-7 max-w-[1280px] mx-auto">{children}</div>;
+  return <div className="px-4 sm:px-8 py-5 sm:py-7 max-w-[1280px] mx-auto">{children}</div>;
 }
 
 /* Tarjeta de KPI grande y visual */
