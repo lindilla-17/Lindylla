@@ -21,15 +21,18 @@
 - [ ] 💡 **Idea** — Solo existe la idea en tu cabeza o en notas sueltas.
 - [ ] 📄 **Documentación** — Está escrito qué se quiere hacer, pero no hay nada construido.
 - [ ] 🎬 **Demo** — Hay algo que se puede *enseñar*, pero NO sirve para usar de verdad.
-- [X] 🛠️ **Prototipo funcional** — Funciona en partes, pero no es fiable ni completo.
-- [ ] 🚀 **MVP** — Versión mínima usable por usuarios reales, con lo justo para aportar valor.
+- [ ] 🛠️ **Prototipo funcional** — Funciona en partes, pero no es fiable ni completo.
+- [X] 🚀 **MVP (publicado online)** — Versión mínima usable, ya en internet con datos reales.
 - [ ] 🏭 **Producción** — En uso real, con datos reales y gente dependiendo de ello.
 
-**Estado actual: 🛠️ Prototipo funcional (local).** La web carga DATOS REALES
-extraídos de los PDFs de cuentas (facturas, presupuestos y gastos 2023-2026),
-se pueden crear/editar/borrar facturas desde la interfaz y hay una segunda
-actividad (Centroveo, sanitaria) con gestión separada. Sigue siendo local,
-sin usuarios ni seguridad, y quedan huecos (ver sección 3).
+**Estado actual: 🚀 MVP publicado (11/07/2026).** La web está **online en
+`https://lindylla.vercel.app`** (Vercel), con base de datos real en la nube
+(Supabase PostgreSQL). Carga datos reales (facturas, presupuestos, gastos
+2023-2026), se pueden crear/editar/borrar facturas, y tiene la segunda actividad
+(Centroveo) con su agenda. Hay DOS entornos separados: **producción** (Vercel +
+Supabase "prod") y **desarrollo** (`localhost:3000` + Supabase "dev"). Todavía
+SIN login/usuarios (cualquiera con el enlace la ve) — ese es el siguiente paso
+antes de considerarlo "Producción" plena.
 
 ---
 
@@ -37,7 +40,9 @@ sin usuarios ni seguridad, y quedan huecos (ver sección 3).
 
 > Lista SOLO lo que se ha probado y funciona de verdad (verificado el 09/07/2026).
 
-- **Web local** en `web/` (Next.js 16 + SQLite). Arranca con `npm run dev` y se ve en `http://localhost:3000`.
+- **PUBLICADA ONLINE** en `https://lindylla.vercel.app` (Vercel), con base de datos real en Supabase (PostgreSQL). Verificado 11/07/2026: cargan panel, finanzas, facturas, empresas y Centroveo con datos reales.
+- **Dos entornos separados**: producción (Vercel + Supabase `lindilla-prod`) y desarrollo (`localhost:3000` + Supabase `lindilla-dev`). El código es el mismo; cambia solo la base de datos (`DATABASE_URL`/`DIRECT_URL`). Deploy automático: cada push a `master` en GitHub republica.
+- **Web local** en `web/` (Next.js 16 + PostgreSQL/Supabase). Arranca con `npm run dev` y se ve en `http://localhost:3000` (usa la base **dev**).
 - **DATOS REALES**: 45 facturas, 40 presupuestos y 205 gastos extraídos de los PDFs de `Lindilla\cuentas` (2023-2026), cargados con `npx prisma db seed`. Exclusiones acordadas con Mercedes (coche, comisiones Amazon 2023, gastos personales) documentadas en `gastos-reales.json` (_pendientes).
 - **Panel**: KPIs reales (beneficio del año, facturado, pendiente de cobro/pago) + comparativa anual + pedidos sin completar + **columna Centroveo** a la derecha.
 - **Finanzas**: rentabilidad real por año (2023-2026), ingresos a recibir y gastos a pagar.
@@ -54,8 +59,7 @@ sin usuarios ni seguridad, y quedan huecos (ver sección 3).
 - **Crear / editar** empresas, productos y presupuestos desde la web (facturas de gorros sí; los gastos de gorros solo se cargan por el script de datos).
 - **Centroveo**: no tiene edición de facturas ya creadas (solo crear/borrar/marcar estado), ni impresión con plantilla, ni datos históricos cargados (empieza vacío).
 - **Generador de presupuestos** (calculadora de consumo de tela, conversión presupuesto→factura automática).
-- **Login / usuarios / permisos**: no hay seguridad; cualquiera con acceso al ordenador lo ve.
-- **Publicación online**: solo funciona en local, no está en internet.
+- **Login / usuarios / permisos**: no hay seguridad. ⚠️ Ahora que está online, **cualquiera con el enlace `lindylla.vercel.app` puede verla y editarla**. Es lo MÁS urgente antes de meter datos sensibles de verdad.
 - **Copias de seguridad automáticas** y gestión documental (logos/plantillas de clientes).
 
 ---
