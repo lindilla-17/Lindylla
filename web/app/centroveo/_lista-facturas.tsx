@@ -105,7 +105,7 @@ export async function ListaFacturasCentroveo({
                     <th className="text-right">IVA</th>
                     <th className="text-right">Total</th>
                     <th>Estado</th>
-                    <th></th>
+                    <th className="sticky right-0 bg-[var(--surface)]"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -128,10 +128,18 @@ export async function ListaFacturasCentroveo({
                           {f.estado === "PAGADA" ? "Cobrada" : "Pendiente"}
                         </Badge>
                       </td>
-                      <td className="text-right whitespace-nowrap">
-                        <CentroveoToggle id={f.id} marcado={f.estado === "PAGADA"} />
-                        <div className="mt-1 flex gap-2 justify-end text-[12px]">
-                          <Link href={`/centroveo/facturas/${f.id}/imprimir`} className="text-[var(--brand-teal-dark)] hover:underline">Ver</Link>
+                      {/* Columna fija a la derecha: siempre visible aunque se deslice la tabla */}
+                      <td className="sticky right-0 bg-[var(--surface)] whitespace-nowrap pl-3 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
+                        <div className="flex items-center gap-2 justify-end">
+                          <Link
+                            href={`/centroveo/facturas/${f.id}/imprimir`}
+                            className="inline-flex items-center gap-1 rounded-lg bg-[var(--brand-teal-dark)] text-white text-[12px] font-semibold px-3 py-1.5 hover:opacity-90 transition-opacity"
+                          >
+                            🖨 Descargar
+                          </Link>
+                          <CentroveoToggle id={f.id} marcado={f.estado === "PAGADA"} />
+                        </div>
+                        <div className="mt-1 text-right">
                           <CentroveoBorrar id={f.id} numero={f.numero} />
                         </div>
                       </td>
