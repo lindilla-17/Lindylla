@@ -24,20 +24,20 @@ export default async function ImprimirCentroveoPage({ params }: { params: Promis
   const tasaIva = f.neto > 0 ? Math.round((f.iva / f.neto) * 100) : 0;
   const cifCliente = CIF_CLIENTE[f.cliente];
 
-  // Líneas detalladas si existen (facturas generadas desde la agenda); si no, una única línea con el concepto
-  let lineas: Linea[] = f.concepto ? [{ concepto: f.concepto, cantidad: 1, precioUnitario: f.neto }] : [];
-  if (f.lineasJson) {
-    try {
-      const parsed = JSON.parse(f.lineasJson);
-      if (Array.isArray(parsed) && parsed.length > 0) lineas = parsed;
-    } catch {
-      // si el JSON no es válido, se mantiene la línea única de arriba
-    }
-  }
+  // La factura oficial siempre lleva un concepto único ("Servicios profesionales" en las
+  // de optometría). El desglose por actividad (si existe) se consulta aparte, en
+  // /centroveo/facturas/[id]/desglose — no se imprime aquí.
+  const lineas: Linea[] = [
+    { concepto: f.concepto || "Servicios profesionales", cantidad: 1, precioUnitario: f.neto },
+  ];
+  const tieneDesglose = !!f.lineasJson;
 
   return (
     <div className="max-w-[820px] mx-auto px-4 sm:px-8 py-6">
-      <CentroveoPrintBar volverA={volverA} />
+      <CentroveoPrintBar
+        volverA={volverA}
+        enlaceExtra={tieneDesglose ? { href: `/centroveo/facturas/${f.id}/desglose`, label: "Ver desglose por conceptos" } : undefined}
+      />
 
       {/* --- Hoja de factura --- */}
       <div className="factura-hoja bg-white text-[#16211e] rounded-xl border border-[var(--border)] shadow-sm px-8 sm:px-12 py-10 print:border-0 print:shadow-none print:rounded-none">

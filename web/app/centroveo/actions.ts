@@ -344,12 +344,12 @@ export async function facturarMes(
   const complementoConcepto = config?.complementoConcepto || "Complemento mensual";
 
   const neto = Math.round((netoTrabajos + complemento) * 100) / 100;
-  let partes = [...grupos.values()].map((g) => `${g.uds} × ${g.nombre}`).join(", ");
-  if (complemento > 0) partes += ` + ${complementoConcepto}`;
   const nombreMes = desde.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
   const numero = await siguienteNumeroCentroveo();
 
-  // Una línea por servicio (para que la factura impresa las muestre desglosadas)
+  // La factura oficial lleva un concepto único y simple ("Servicios profesionales").
+  // El desglose por actividad se guarda en lineasJson y se muestra en un documento aparte
+  // (/centroveo/facturas/[id]/desglose), no en la factura.
   const lineas = [...grupos.values()].map((g) => ({
     concepto: g.nombre,
     cantidad: g.uds,
@@ -364,7 +364,7 @@ export async function facturarMes(
       numero,
       tipo: "PROFESIONAL",
       cliente: "Cilveti Lapeira S.L.",
-      concepto: `Servicios profesionales de optometría — ${nombreMes}: ${partes}`,
+      concepto: `Servicios profesionales — ${nombreMes}`,
       lineasJson: JSON.stringify(lineas),
       fecha: hasta > new Date() ? new Date() : new Date(y, m, 0),
       estado: "PENDIENTE",
