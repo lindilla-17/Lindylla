@@ -31,6 +31,8 @@
       "lineas": [ { "concepto": "Gorros quirófano personalizado con nombre", "cantidad": 49, "precioUnitario": 9.0 } ] },
     { "numero": "2613", "fecha": "2026-07-07", "cliente": "DM Médica", "concepto": "25 gorros pelo corto + 25 gorros pelo largo", "neto": 400.0, "total": 484.0, "archivo": "2613 factura 50 gorros lindilla SL.pdf",
       "lineas": [ { "concepto": "Gorros de pelo corto", "cantidad": 25, "precioUnitario": 8.0 }, { "concepto": "Gorros de pelo largo", "cantidad": 25, "precioUnitario": 8.0 } ] },
+    { "numero": "2614", "fecha": "2026-07-22", "cliente": "STAAR Surgical España", "concepto": "150 gorros quirófano de pelo corto y largo", "neto": 1410.0, "total": 1706.1, "archivo": "2614 factura gorros copa del  mundo.pdf",
+      "lineas": [ { "concepto": "Gorros quirófano de pelo corto y largo", "cantidad": 150, "precioUnitario": 9.4 } ] },
     { "numero": "2503", "fecha": "2025-01-23", "cliente": "Bausch + Lomb Polonia", "concepto": "400 gorros personalizados + envío (Order 4500511175)", "neto": 2280.0, "total": 2280.0, "archivo": "2503 Invoice of Lindilla caps for Poland.pdf", "nota": "Emitida como Mercedes Marcos Ferrando (autónoma, antes de la S.L.)",
       "lineas": [ { "concepto": "Customized long hair caps", "cantidad": 280, "precioUnitario": 5.7 }, { "concepto": "Customized short hair caps", "cantidad": 120, "precioUnitario": 5.7 }, { "concepto": "Envío (Order 4500511175)", "cantidad": 1, "precioUnitario": 100.0 } ] },
     { "numero": "2501", "fecha": "2025-01-09", "cliente": "Bausch + Lomb España", "concepto": "2000 gorros quirófano (de 3000 acordados para 2025)", "neto": 11400.0, "total": 13794.0, "archivo": "factura lindilla 250109 España.pdf",
