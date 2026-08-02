@@ -91,7 +91,7 @@ export function Sidebar() {
       </aside>
 
       {/* ---------- Barra superior (móvil) ---------- */}
-      <header className="lg:hidden fixed top-0 inset-x-0 z-40 h-14 flex items-center gap-2 px-4 bg-[var(--side)] border-b border-[var(--border)]">
+      <header className="no-print lg:hidden fixed top-0 inset-x-0 z-40 h-14 flex items-center gap-2 px-4 bg-[var(--side)] border-b border-[var(--border)]">
         <Link href="/" className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.jpg" alt="Lindilla" className="h-9 w-auto" />
@@ -100,7 +100,7 @@ export function Sidebar() {
       </header>
 
       {/* ---------- Barra de navegación inferior (móvil) ---------- */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[var(--surface)] border-t border-[var(--border)] pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_10px_rgba(0,0,0,0.04)]">
+      <nav className="no-print lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[var(--surface)] border-t border-[var(--border)] pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_10px_rgba(0,0,0,0.04)]">
         <div className="flex items-stretch justify-around">
           {movil.map((item) => {
             const on = activo(item.href);

@@ -115,26 +115,12 @@ export default async function ImprimirCentroveoPage({ params }: { params: Promis
           </div>
         </div>
 
-        {f.iva === 0 && (
-          <div className="mt-4 text-[11px] text-[#5b6b66]">
-            Operación exenta de IVA — servicios sanitarios (art. 20 LIVA).
-          </div>
-        )}
-
-        {/* Pie: pago e información (mismos datos bancarios que las facturas de Lindilla) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-12 pt-6 border-t border-[#d9d2c7] text-[12px] leading-relaxed">
-          <div>
-            <div className="font-serif text-[13px] text-[#c96f00] mb-2">DETALLES DEL PAGO</div>
-            <div>Nombre del beneficiario: Lindilla S.L.</div>
-            <div>Nombre del banco: Banco Santander</div>
-            <div>Número de cuenta: ES05 0049 4394 2227 1007 1254</div>
-          </div>
-          <div className="sm:text-right">
-            <div className="font-serif text-[13px] text-[#c96f00] mb-2">INFORMACIÓN ADICIONAL</div>
-            <div>Mercedes Marcos Ferrando</div>
-            <div>Óptica y optometría · Centroveo</div>
-            {f.notas && <div className="mt-1 text-[#5b6b66]">{f.notas}</div>}
-          </div>
+        {/* Pie: datos de pago (mismos datos bancarios que las facturas de Lindilla) */}
+        <div className="mt-12 pt-6 border-t border-[#d9d2c7] text-[12px] leading-relaxed">
+          <div className="font-serif text-[13px] text-[#c96f00] mb-2">DETALLES DEL PAGO</div>
+          <div>Nombre del beneficiario: Lindilla S.L.</div>
+          <div>Nombre del banco: Banco Santander</div>
+          <div>Número de cuenta: ES05 0049 4394 2227 1007 1254</div>
         </div>
       </div>
     </div>
