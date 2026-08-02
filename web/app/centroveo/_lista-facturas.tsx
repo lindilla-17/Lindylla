@@ -55,53 +55,92 @@ export async function ListaFacturasCentroveo({
         {facturas.length === 0 ? (
           <Empty>Aún no hay facturas en este apartado. Usa «+ Nueva factura» para crear la primera.</Empty>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="tbl">
-              <thead>
-                <tr>
-                  <th>Nº</th>
-                  <th>Cliente</th>
-                  <th>Concepto</th>
-                  <th>Fecha</th>
-                  <th className="text-right">Sin IVA</th>
-                  <th className="text-right">IVA</th>
-                  <th className="text-right">Total</th>
-                  <th>Estado</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {facturas.map((f) => (
-                  <tr key={f.id}>
-                    <td className="font-mono text-[13px] muted whitespace-nowrap">{f.numero}</td>
-                    <td className="font-medium whitespace-nowrap">{f.cliente}</td>
-                    <td className="muted text-[13px] max-w-[280px]">
-                      {f.concepto ?? "—"}
-                      {f.notas && <div className="muted-2 text-[11px] mt-0.5">{f.notas}</div>}
-                    </td>
-                    <td className="muted whitespace-nowrap">{fecha(f.fecha)}</td>
-                    <td className="text-right whitespace-nowrap">{euroExacto(f.neto)}</td>
-                    <td className="text-right whitespace-nowrap">
-                      {f.iva !== 0 ? <span className="muted">{euroExacto(f.iva)}</span> : <span className="muted-2 text-[12px]">exenta</span>}
-                    </td>
-                    <td className="text-right font-semibold whitespace-nowrap">{euroExacto(f.total)}</td>
-                    <td>
-                      <Badge variant={f.estado === "PAGADA" ? "green" : "amber"}>
-                        {f.estado === "PAGADA" ? "Cobrada" : "Pendiente"}
-                      </Badge>
-                    </td>
-                    <td className="text-right whitespace-nowrap">
-                      <CentroveoToggle id={f.id} marcado={f.estado === "PAGADA"} />
-                      <div className="mt-1 flex gap-2 justify-end text-[12px]">
-                        <Link href={`/centroveo/facturas/${f.id}/imprimir`} className="text-[var(--brand-teal-dark)] hover:underline">Ver</Link>
-                        <CentroveoBorrar id={f.id} numero={f.numero} />
-                      </div>
-                    </td>
+          <>
+            {/* Tarjetas (móvil): todo visible de un vistazo, sin deslizar */}
+            <div className="lg:hidden flex flex-col gap-3 p-3">
+              {facturas.map((f) => (
+                <div key={f.id} className="rounded-xl border border-[var(--border)] p-3.5 flex flex-col gap-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="font-mono text-[12px] muted">{f.numero} · {fecha(f.fecha)}</div>
+                      <div className="font-semibold text-[15px] truncate">{f.cliente}</div>
+                    </div>
+                    <Badge variant={f.estado === "PAGADA" ? "green" : "amber"}>
+                      {f.estado === "PAGADA" ? "Cobrada" : "Pendiente"}
+                    </Badge>
+                  </div>
+                  {f.concepto && <div className="muted text-[13px]">{f.concepto}</div>}
+                  <div className="flex items-baseline justify-between pt-1 border-t border-[var(--border-soft)]">
+                    <span className="muted-2 text-[12px]">
+                      {euroExacto(f.neto)} + {f.iva !== 0 ? `IVA ${euroExacto(f.iva)}` : "exenta"}
+                    </span>
+                    <span className="font-bold text-[18px]">{euroExacto(f.total)}</span>
+                  </div>
+                  <div className="flex items-center gap-3 pt-1">
+                    <Link
+                      href={`/centroveo/facturas/${f.id}/imprimir`}
+                      className="flex-1 text-center rounded-lg bg-[var(--brand-teal-dark)] text-white text-[13px] font-semibold py-2"
+                    >
+                      🖨 Ver / Descargar PDF
+                    </Link>
+                    <CentroveoToggle id={f.id} marcado={f.estado === "PAGADA"} />
+                  </div>
+                  <div className="text-right">
+                    <CentroveoBorrar id={f.id} numero={f.numero} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tabla (ordenador) */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th>Nº</th>
+                    <th>Cliente</th>
+                    <th>Concepto</th>
+                    <th>Fecha</th>
+                    <th className="text-right">Sin IVA</th>
+                    <th className="text-right">IVA</th>
+                    <th className="text-right">Total</th>
+                    <th>Estado</th>
+                    <th></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {facturas.map((f) => (
+                    <tr key={f.id}>
+                      <td className="font-mono text-[13px] muted whitespace-nowrap">{f.numero}</td>
+                      <td className="font-medium whitespace-nowrap">{f.cliente}</td>
+                      <td className="muted text-[13px] max-w-[280px]">
+                        {f.concepto ?? "—"}
+                        {f.notas && <div className="muted-2 text-[11px] mt-0.5">{f.notas}</div>}
+                      </td>
+                      <td className="muted whitespace-nowrap">{fecha(f.fecha)}</td>
+                      <td className="text-right whitespace-nowrap">{euroExacto(f.neto)}</td>
+                      <td className="text-right whitespace-nowrap">
+                        {f.iva !== 0 ? <span className="muted">{euroExacto(f.iva)}</span> : <span className="muted-2 text-[12px]">exenta</span>}
+                      </td>
+                      <td className="text-right font-semibold whitespace-nowrap">{euroExacto(f.total)}</td>
+                      <td>
+                        <Badge variant={f.estado === "PAGADA" ? "green" : "amber"}>
+                          {f.estado === "PAGADA" ? "Cobrada" : "Pendiente"}
+                        </Badge>
+                      </td>
+                      <td className="text-right whitespace-nowrap">
+                        <CentroveoToggle id={f.id} marcado={f.estado === "PAGADA"} />
+                        <div className="mt-1 flex gap-2 justify-end text-[12px]">
+                          <Link href={`/centroveo/facturas/${f.id}/imprimir`} className="text-[var(--brand-teal-dark)] hover:underline">Ver</Link>
+                          <CentroveoBorrar id={f.id} numero={f.numero} />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </Panel>
     </Page>
