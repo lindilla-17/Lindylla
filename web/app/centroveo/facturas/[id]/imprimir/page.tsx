@@ -15,6 +15,16 @@ const CIF_CLIENTE: Record<string, string> = {
   "Cilveti Lapeira S.L.": "B-93092922",
 };
 
+// El título de la página es lo que el navegador propone como nombre de archivo
+// al "Guardar como PDF": así el PDF sale ya nombrado con el número de factura
+// (ej. "26-09.pdf"), fácil de identificar en la carpeta de cuentas.
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const f = await prisma.centroveoFactura.findUnique({ where: { id }, select: { numero: true } });
+  if (!f) return {};
+  return { title: f.numero.replace(/\//g, "-") };
+}
+
 export default async function ImprimirCentroveoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const f = await prisma.centroveoFactura.findUnique({ where: { id } });
