@@ -8,6 +8,13 @@ export const dynamic = "force-dynamic";
 const euro = (n: number) => n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 const fechaLarga = (d: Date) => d.toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" });
 
+type Linea = { concepto: string; cantidad: number; precioUnitario: number };
+
+// CIF de clientes habituales de Centroveo (dirección aún pendiente de confirmar)
+const CIF_CLIENTE: Record<string, string> = {
+  "Cilveti Lapeira S.L.": "B-93092922",
+};
+
 export default async function ImprimirCentroveoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const f = await prisma.centroveoFactura.findUnique({ where: { id } });
@@ -15,6 +22,18 @@ export default async function ImprimirCentroveoPage({ params }: { params: Promis
 
   const volverA = f.tipo === "PROFESIONAL" ? "/centroveo/profesionales" : "/centroveo/emitidas";
   const tasaIva = f.neto > 0 ? Math.round((f.iva / f.neto) * 100) : 0;
+  const cifCliente = CIF_CLIENTE[f.cliente];
+
+  // Líneas detalladas si existen (facturas generadas desde la agenda); si no, una única línea con el concepto
+  let lineas: Linea[] = f.concepto ? [{ concepto: f.concepto, cantidad: 1, precioUnitario: f.neto }] : [];
+  if (f.lineasJson) {
+    try {
+      const parsed = JSON.parse(f.lineasJson);
+      if (Array.isArray(parsed) && parsed.length > 0) lineas = parsed;
+    } catch {
+      // si el JSON no es válido, se mantiene la línea única de arriba
+    }
+  }
 
   return (
     <div className="max-w-[820px] mx-auto px-4 sm:px-8 py-6">
@@ -38,6 +57,7 @@ export default async function ImprimirCentroveoPage({ params }: { params: Promis
           <div>
             <div className="muted-2 text-[11px] uppercase tracking-wide mb-1">Cliente</div>
             <div className="font-bold">{f.cliente}</div>
+            {cifCliente && <div>CIF: {cifCliente}</div>}
           </div>
           <div className="text-right">
             <div className="font-bold">Lindilla S.L. (Centroveo)</div>
@@ -49,24 +69,31 @@ export default async function ImprimirCentroveoPage({ params }: { params: Promis
           </div>
         </div>
 
-        {/* Líneas */}
+        {/* Líneas: un servicio por renglón */}
         <table className="w-full mt-8 text-[13px]">
           <thead>
             <tr className="border-y-2 border-[#16211e]">
               <th className="text-left py-2 font-semibold">CONCEPTO</th>
-              <th className="text-right py-2 font-semibold w-[140px]">IMPORTE</th>
+              <th className="text-right py-2 font-semibold w-[60px]">UDS.</th>
+              <th className="text-right py-2 font-semibold w-[100px]">P. UNIDAD</th>
+              <th className="text-right py-2 font-semibold w-[120px]">IMPORTE</th>
             </tr>
           </thead>
           <tbody>
-            <tr className="bg-[#faf7f2]">
-              <td className="py-2.5 px-1">{f.concepto ?? "Servicios profesionales de optometría"}</td>
-              <td className="py-2.5 px-1 text-right">{euro(f.neto)}</td>
-            </tr>
-            {[0, 1].map((i) => (
-              <tr key={i} className={i % 2 === 0 ? "" : "bg-[#faf7f2]"}>
-                <td className="py-2.5">&nbsp;</td><td />
+            {lineas.map((l, i) => (
+              <tr key={i} className={i % 2 === 0 ? "bg-[#faf7f2]" : ""}>
+                <td className="py-2.5 px-1">{l.concepto}</td>
+                <td className="py-2.5 px-1 text-right">{l.cantidad}</td>
+                <td className="py-2.5 px-1 text-right">{euro(l.precioUnitario)}</td>
+                <td className="py-2.5 px-1 text-right">{euro(l.cantidad * l.precioUnitario)}</td>
               </tr>
             ))}
+            {lineas.length < 3 &&
+              Array.from({ length: 3 - lineas.length }).map((_, i) => (
+                <tr key={`v${i}`} className={(lineas.length + i) % 2 === 0 ? "bg-[#faf7f2]" : ""}>
+                  <td className="py-2.5">&nbsp;</td><td /><td /><td />
+                </tr>
+              ))}
           </tbody>
         </table>
 
@@ -94,12 +121,13 @@ export default async function ImprimirCentroveoPage({ params }: { params: Promis
           </div>
         )}
 
-        {/* Pie: pago e información */}
+        {/* Pie: pago e información (mismos datos bancarios que las facturas de Lindilla) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-12 pt-6 border-t border-[#d9d2c7] text-[12px] leading-relaxed">
           <div>
             <div className="font-serif text-[13px] text-[#c96f00] mb-2">DETALLES DEL PAGO</div>
-            <div>Forma de pago: Transferencia</div>
-            <div>Titular: Lindilla S.L. (Centroveo)</div>
+            <div>Nombre del beneficiario: Lindilla S.L.</div>
+            <div>Nombre del banco: Banco Santander</div>
+            <div>Número de cuenta: ES05 0049 4394 2227 1007 1254</div>
           </div>
           <div className="sm:text-right">
             <div className="font-serif text-[13px] text-[#c96f00] mb-2">INFORMACIÓN ADICIONAL</div>

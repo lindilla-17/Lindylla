@@ -121,6 +121,7 @@ model CentroveoFactura {
   total     Float     @default(0)
   archivo   String?
   notas     String?
+  lineasJson String? // líneas detalladas (una por servicio) en JSON, ej. [{concepto,cantidad,precioUnitario}]
   trabajos  CentroveoTrabajo[] // partes de agenda que se facturaron aquí
   createdAt DateTime  @default(now())
 }

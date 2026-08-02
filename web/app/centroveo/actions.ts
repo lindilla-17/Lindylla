@@ -349,12 +349,23 @@ export async function facturarMes(
   const nombreMes = desde.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
   const numero = await siguienteNumeroCentroveo();
 
+  // Una línea por servicio (para que la factura impresa las muestre desglosadas)
+  const lineas = [...grupos.values()].map((g) => ({
+    concepto: g.nombre,
+    cantidad: g.uds,
+    precioUnitario: g.precio,
+  }));
+  if (complemento > 0) {
+    lineas.push({ concepto: complementoConcepto, cantidad: 1, precioUnitario: complemento });
+  }
+
   const factura = await prisma.centroveoFactura.create({
     data: {
       numero,
       tipo: "PROFESIONAL",
       cliente: "Cilveti Lapeira S.L.",
       concepto: `Servicios profesionales de optometría — ${nombreMes}: ${partes}`,
+      lineasJson: JSON.stringify(lineas),
       fecha: hasta > new Date() ? new Date() : new Date(y, m, 0),
       estado: "PENDIENTE",
       neto,
