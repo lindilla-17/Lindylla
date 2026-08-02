@@ -182,8 +182,8 @@ async function main() {
   }
   await prisma.centroveoConfig.upsert({
     where: { id: "config" },
-    create: { id: "config", complementoMensual: centroveoConfig.config.complementoMensual, complementoConcepto: centroveoConfig.config.complementoConcepto },
-    update: { complementoMensual: centroveoConfig.config.complementoMensual, complementoConcepto: centroveoConfig.config.complementoConcepto },
+    create: { id: "config", complementoMensual: centroveoConfig.config.complementoMensual, complementoConcepto: centroveoConfig.config.complementoConcepto, ultimoNumeroManual: centroveoConfig.config.ultimoNumeroManual ?? "" },
+    update: { complementoMensual: centroveoConfig.config.complementoMensual, complementoConcepto: centroveoConfig.config.complementoConcepto, ultimoNumeroManual: centroveoConfig.config.ultimoNumeroManual ?? "" },
   });
 
   console.log(`✅ Datos reales cargados: ${creadas} facturas, ${presCreados} presupuestos, ${gastosCreados} gastos, ${empresas.length} empresas, ${centroveoConfig.actividades.length} actividades Centroveo.`);

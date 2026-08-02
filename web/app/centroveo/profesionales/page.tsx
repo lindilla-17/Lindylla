@@ -9,7 +9,7 @@ export default function ProfesionalesPage() {
     <ListaFacturasCentroveo
       tipo="PROFESIONAL"
       titulo="Facturas de trabajos profesionales"
-      subtitulo="Servicios de optometría en el Hospital Vithas Xanit · exentas de IVA (servicios sanitarios)."
+      subtitulo="Servicios de optometría facturados a Cilveti Lapeira S.L. · exentas de IVA (servicios sanitarios)."
       etiquetaIva="IVA (exentas)"
     />
   );

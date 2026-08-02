@@ -92,7 +92,8 @@ export async function ListaFacturasCentroveo({
                     </td>
                     <td className="text-right whitespace-nowrap">
                       <CentroveoToggle id={f.id} marcado={f.estado === "PAGADA"} />
-                      <div className="mt-1 text-right">
+                      <div className="mt-1 flex gap-2 justify-end text-[12px]">
+                        <Link href={`/centroveo/facturas/${f.id}/imprimir`} className="text-[var(--brand-teal-dark)] hover:underline">Ver</Link>
                         <CentroveoBorrar id={f.id} numero={f.numero} />
                       </div>
                     </td>

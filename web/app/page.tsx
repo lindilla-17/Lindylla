@@ -224,7 +224,7 @@ export default async function DashboardPage() {
         {/* Mini-resumen del año */}
         <div className="grid grid-cols-2 xl:grid-cols-1 gap-3 mb-5">
           <MiniStat label={`Venta de lentes ${year}`} value={euro(cvLentes)} sub="IVA 10%" />
-          <MiniStat label={`Servicios optometría ${year}`} value={euro(cvServicios)} sub="Vithas Xanit · exentas de IVA" />
+          <MiniStat label={`Servicios optometría ${year}`} value={euro(cvServicios)} sub="Cilveti Lapeira · exentas de IVA" />
           <MiniStat label={`Gastos proveedores ${year}`} value={euro(cvGastosAno)} />
           <MiniStat label="Pendiente de cobro" value={euro(cvPendiente)} />
         </div>

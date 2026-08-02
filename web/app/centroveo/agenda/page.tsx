@@ -263,7 +263,7 @@ export default async function AgendaPage({
                 <div className="pt-1">
                   <FacturarMesBtn mes={mesStr} />
                   <p className="muted-2 text-[11px] mt-2">
-                    Crea una factura profesional (exenta de IVA) al Hospital Vithas Xanit con el trabajo facturable pendiente de este mes.
+                    Crea una factura profesional (exenta de IVA) a Cilveti Lapeira S.L. con el trabajo facturable pendiente de este mes.
                   </p>
                 </div>
               ) : (

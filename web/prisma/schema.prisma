@@ -147,6 +147,9 @@ model CentroveoConfig {
   id                  String @id @default("config")
   complementoMensual  Float  @default(0)
   complementoConcepto String @default("Cuota de autónomos")
+  // Último número de factura ya emitido a mano (formato "AA/NN", ej. "26/08"),
+  // para que las facturas generadas por la agenda sigan la misma serie.
+  ultimoNumeroManual  String @default("")
 }
 
 // Agenda de trabajo profesional: cada apunte es el trabajo de un día

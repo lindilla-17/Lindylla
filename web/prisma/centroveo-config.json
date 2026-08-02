@@ -76,6 +76,7 @@
   ],
   "config": {
     "complementoMensual": 300,
-    "complementoConcepto": "Cuota de autónomos"
+    "complementoConcepto": "Cuota de autónomos",
+    "ultimoNumeroManual": "26/08"
   }
 }

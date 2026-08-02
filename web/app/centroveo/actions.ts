@@ -24,17 +24,21 @@ function refrescar() {
 // Sugiere el siguiente número de la serie del año (CV-26-001, CV-26-002...)
 // La serie es común a lentes y servicios; el número siempre es editable.
 export async function siguienteNumeroCentroveo(): Promise<string> {
-  const yy = String(new Date().getFullYear()).slice(2);
-  const prefijo = `CV-${yy}-`;
-  const facturas = await prisma.centroveoFactura.findMany({ select: { numero: true } });
+  const yy = String(new Date().getFullYear()).slice(2); // "26"
+  const [facturas, config] = await Promise.all([
+    prisma.centroveoFactura.findMany({ select: { numero: true } }),
+    prisma.centroveoConfig.findUnique({ where: { id: "config" } }),
+  ]);
+  // Serie "AA/NN" (ej. 26/09). Toma el mayor número del año, incluyendo el
+  // último emitido a mano (config.ultimoNumeroManual), y suma 1.
   let max = 0;
-  for (const f of facturas) {
-    if (f.numero.startsWith(prefijo)) {
-      const n = parseInt(f.numero.slice(prefijo.length));
-      if (!isNaN(n) && n > max) max = n;
-    }
-  }
-  return `${prefijo}${String(max + 1).padStart(3, "0")}`;
+  const considerar = (num?: string | null) => {
+    const m = (num ?? "").match(/^(\d{2})\/(\d+)$/);
+    if (m && m[1] === yy) max = Math.max(max, parseInt(m[2]));
+  };
+  for (const f of facturas) considerar(f.numero);
+  considerar(config?.ultimoNumeroManual);
+  return `${yy}/${String(max + 1).padStart(2, "0")}`;
 }
 
 // Crea una factura emitida de Centroveo.
@@ -349,8 +353,8 @@ export async function facturarMes(
     data: {
       numero,
       tipo: "PROFESIONAL",
-      cliente: "Hospital Vithas Xanit",
-      concepto: `Trabajos profesionales de optometría — ${nombreMes}: ${partes}`,
+      cliente: "Cilveti Lapeira S.L.",
+      concepto: `Servicios profesionales de optometría — ${nombreMes}: ${partes}`,
       fecha: hasta > new Date() ? new Date() : new Date(y, m, 0),
       estado: "PENDIENTE",
       neto,

@@ -68,7 +68,7 @@ export default async function CentroveoPage() {
         <Apartado
           href="/centroveo/profesionales"
           titulo="Facturas de trabajos profesionales"
-          descripcion="Optometría en Hospital Vithas Xanit · exentas de IVA"
+          descripcion="Optometría (Cilveti Lapeira S.L.) · exentas de IVA"
           cantidad={facturas.filter((f) => f.tipo === "PROFESIONAL").length}
         />
       </div>

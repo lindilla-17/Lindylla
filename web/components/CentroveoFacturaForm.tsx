@@ -18,7 +18,7 @@ export function CentroveoFacturaForm({
   const router = useRouter();
   const [tipo, setTipo] = useState<"LENTES" | "PROFESIONAL">(tipoInicial);
   const [numero, setNumero] = useState(numeroSugerido);
-  const [cliente, setCliente] = useState(tipoInicial === "PROFESIONAL" ? "Hospital Vithas Xanit" : "");
+  const [cliente, setCliente] = useState(tipoInicial === "PROFESIONAL" ? "Cilveti Lapeira S.L." : "");
   const [concepto, setConcepto] = useState("");
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
   const [neto, setNeto] = useState<string>("");
@@ -56,7 +56,7 @@ export function CentroveoFacturaForm({
             activo={tipo === "PROFESIONAL"}
             onClick={() => {
               setTipo("PROFESIONAL");
-              if (!cliente) setCliente("Hospital Vithas Xanit");
+              if (!cliente) setCliente("Cilveti Lapeira S.L.");
             }}
           >
             Servicios de optometría · exenta de IVA
@@ -86,7 +86,7 @@ export function CentroveoFacturaForm({
           className={inputCls}
           value={cliente}
           onChange={(e) => setCliente(e.target.value)}
-          placeholder={tipo === "LENTES" ? "Nombre del cliente" : "Hospital Vithas Xanit"}
+          placeholder={tipo === "LENTES" ? "Nombre del cliente" : "Cilveti Lapeira S.L."}
           required
         />
       </div>
