@@ -2,12 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 
 // Comprueba dónde está el PDF de cada factura:
-//  - en su carpeta de cuentas del año (C:\...\OneDrive\Lindilla\cuentas\<año>\...)
+//  - en su carpeta de cuentas del año (G:\Mi unidad\Lindilla\cuentas\<año>\...)
 //  - en la carpeta de la empresa (C:\...\Lindilla\trabajos empresas\<carpeta>\...)
-// "cuentas" vive dentro de OneDrive desde 12/08/2026 para poder sincronizarla
+// "cuentas" vive dentro de Google Drive desde 13/08/2026 para poder sincronizarla
 // también con la nube (guardado automático de facturas de Centroveo).
 
-const RUTA_CUENTAS = "C:\\Users\\lindymarcos\\OneDrive\\Lindilla\\cuentas";
+const RUTA_CUENTAS = "G:\\Mi unidad\\Lindilla\\cuentas";
 const RUTA_EMPRESAS = "C:\\Users\\lindymarcos\\Lindilla\\trabajos empresas";
 
 // Cache por proceso: lista de archivos por directorio raíz (se refresca cada 5 min)
