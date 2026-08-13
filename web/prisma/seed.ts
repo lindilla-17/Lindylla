@@ -6,7 +6,7 @@ import centroveoConfig from "./centroveo-config.json";
 
 const prisma = new PrismaClient();
 
-// Carga SOLO datos reales, extraídos de los PDFs de C:\Users\lindymarcos\Lindilla\cuentas.
+// Carga SOLO datos reales, extraídos de los PDFs de C:\Users\lindymarcos\OneDrive\Lindilla\cuentas.
 // Las facturas de años pasados se marcan como PAGADAS por defecto (supuesto razonable
 // para histórico); las de los últimos 60 días como PENDIENTES. Ajustable desde la web.
 
