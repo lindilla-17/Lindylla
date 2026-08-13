@@ -46,3 +46,7 @@ prisma/*.db-journal
 
 # log local del servidor de desarrollo
 .devlog.txt
+
+# credenciales de Google Cloud (clave de la cuenta de servicio para Drive) — nunca a git
+credentials-google-drive.json
+google-drive-key.json
