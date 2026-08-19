@@ -50,3 +50,6 @@ prisma/*.db-journal
 # credenciales de Google Cloud (clave de la cuenta de servicio para Drive) — nunca a git
 credentials-google-drive.json
 google-drive-key.json
+oauth-credentials.txt
+oauth-credentials.json
+google-refresh-token.json

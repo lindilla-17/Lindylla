@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { CentroveoPrintBar } from "@/components/CentroveoPrintBar";
+import { CIF_CLIENTE } from "../../../trabajos";
 
 export const dynamic = "force-dynamic";
 
@@ -9,11 +10,6 @@ const euro = (n: number) => n.toLocaleString("de-DE", { minimumFractionDigits: 2
 const fechaLarga = (d: Date) => d.toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" });
 
 type Linea = { concepto: string; cantidad: number; precioUnitario: number };
-
-// CIF de clientes habituales de Centroveo (dirección aún pendiente de confirmar)
-const CIF_CLIENTE: Record<string, string> = {
-  "Cilveti Lapeira S.L.": "B-93092922",
-};
 
 // El título de la página es lo que el navegador propone como nombre de archivo
 // al "Guardar como PDF": así el PDF sale ya nombrado con el número de factura

@@ -2,7 +2,55 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { ACTIVIDADES_DEFECTO } from "./trabajos";
+import { ACTIVIDADES_DEFECTO, CIF_CLIENTE } from "./trabajos";
+import { generarFacturaCentroveoPdf } from "@/lib/facturaPdf";
+import { subirFacturaCentroveoADrive } from "@/lib/googleDrive";
+
+// Genera el PDF de una factura y lo sube a Drive; si algo falla (credenciales
+// no configuradas, sin conexión...) NO rompe la creación de la factura: se
+// deja anotado en "notas" para que la usuaria sepa que tiene que guardarla a mano.
+async function guardarFacturaEnDrive(factura: {
+  id: string;
+  numero: string;
+  tipo: string;
+  cliente: string;
+  concepto: string | null;
+  fecha: Date;
+  neto: number;
+  iva: number;
+  total: number;
+  notas: string | null;
+}) {
+  try {
+    const nombreArchivo = `${factura.numero.replace(/\//g, "-")}.pdf`;
+    const pdf = await generarFacturaCentroveoPdf({
+      numero: factura.numero,
+      fecha: factura.fecha,
+      cliente: factura.cliente,
+      cifCliente: CIF_CLIENTE[factura.cliente],
+      concepto: factura.concepto || "Servicios profesionales",
+      neto: factura.neto,
+      iva: factura.iva,
+      total: factura.total,
+    });
+    const resultado = await subirFacturaCentroveoADrive({ pdf, nombreArchivo, fecha: factura.fecha });
+    if (resultado.ok) {
+      await prisma.centroveoFactura.update({
+        where: { id: factura.id },
+        data: { archivo: nombreArchivo },
+      });
+    } else {
+      const aviso = `Guardado automático en Drive pendiente: ${resultado.error}`;
+      await prisma.centroveoFactura.update({
+        where: { id: factura.id },
+        data: { notas: factura.notas ? `${factura.notas} — ${aviso}` : aviso },
+      });
+    }
+  } catch (e) {
+    // No debe romper el flujo de creación de la factura bajo ninguna circunstancia.
+    console.error("Error guardando factura en Drive:", e);
+  }
+}
 
 // ============================================================
 // Acciones de CENTROVEO (actividad sanitaria de Lindilla S.L.)
@@ -63,7 +111,7 @@ export async function crearCentroveoFactura(input: {
   const neto = Math.round(input.neto * 100) / 100;
   const iva = input.tipo === "LENTES" ? Math.round(neto * 0.1 * 100) / 100 : 0;
 
-  await prisma.centroveoFactura.create({
+  const factura = await prisma.centroveoFactura.create({
     data: {
       numero: input.numero.trim(),
       tipo: input.tipo,
@@ -81,6 +129,7 @@ export async function crearCentroveoFactura(input: {
     },
   });
 
+  await guardarFacturaEnDrive(factura);
   refrescar();
   return { ok: true };
 }
@@ -380,6 +429,7 @@ export async function facturarMes(
     data: { facturaId: factura.id },
   });
 
+  await guardarFacturaEnDrive(factura);
   refrescar();
   return { ok: true, id: factura.id };
 }

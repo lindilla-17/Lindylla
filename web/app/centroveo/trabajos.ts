@@ -12,3 +12,9 @@ export const PALETA = [
   "#2563eb", "#e4056f", "#d97706", "#16a34a", "#7c3aed",
   "#0891b2", "#dc2626", "#4e8f84", "#ca8a04", "#64748b",
 ];
+
+// CIF de clientes habituales de Centroveo (dirección aún pendiente de confirmar).
+// Compartido entre la vista de impresión y el PDF generado en el servidor.
+export const CIF_CLIENTE: Record<string, string> = {
+  "Cilveti Lapeira S.L.": "B-93092922",
+};
