@@ -3,8 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { Readable } from "node:stream";
 
-// Sube facturas de Centroveo a la carpeta correspondiente en Google Drive:
-// Lindilla > cuentas > <año> > centroveo > <N>º trimestre > ingresos
+// Sube facturas al Google Drive de Mercedes, en la carpeta que le corresponda
+// dentro de: Lindilla > cuentas > <año> > ...
 //
 // Google NO deja que una "cuenta de servicio" cree archivos en un Drive
 // personal (solo en cuentas de empresa de pago), así que se usa autorización
@@ -79,28 +79,22 @@ function trimestreDe(fecha: Date): string {
 
 export type SubidaResultado = { ok: true; carpeta: string } | { ok: false; error: string };
 
-// Sube el PDF de una factura de Centroveo a cuentas/<año>/centroveo/<trimestre>/ingresos
-export async function subirFacturaCentroveoADrive(opts: {
-  pdf: Buffer;
-  nombreArchivo: string;
-  fecha: Date;
-}): Promise<SubidaResultado> {
+// Sube un PDF a una ruta de carpetas dentro de "Lindilla" en Drive, creando
+// las que falten. `carpetas` es la ruta relativa, ej. ["cuentas", "2026",
+// "centroveo", "3º trimestre", "ingresos"].
+async function subirADrive(opts: { pdf: Buffer; nombreArchivo: string; carpetas: string[] }): Promise<SubidaResultado> {
   const drive = getDrive();
   if (!drive) return { ok: false, error: "Credenciales de Google Drive no configuradas." };
 
   try {
-    const anio = String(opts.fecha.getFullYear());
-    const trimestre = trimestreDe(opts.fecha);
-
-    const cuentasId = await buscarOCrearCarpeta(drive, ROOT_FOLDER_ID, "cuentas");
-    const anioId = await buscarOCrearCarpeta(drive, cuentasId, anio);
-    const centroveoId = await buscarOCrearCarpeta(drive, anioId, "centroveo");
-    const trimestreId = await buscarOCrearCarpeta(drive, centroveoId, trimestre);
-    const ingresosId = await buscarOCrearCarpeta(drive, trimestreId, "ingresos");
+    let carpetaId = ROOT_FOLDER_ID;
+    for (const nombre of opts.carpetas) {
+      carpetaId = await buscarOCrearCarpeta(drive, carpetaId, nombre);
+    }
 
     // Si ya existe un archivo con ese nombre en la carpeta, lo sustituye (evita duplicados)
     const existentes = await drive.files.list({
-      q: `'${ingresosId}' in parents and name = '${opts.nombreArchivo.replace(/'/g, "\\'")}' and trashed = false`,
+      q: `'${carpetaId}' in parents and name = '${opts.nombreArchivo.replace(/'/g, "\\'")}' and trashed = false`,
       fields: "files(id)",
     });
 
@@ -110,14 +104,36 @@ export async function subirFacturaCentroveoADrive(opts: {
       await drive.files.update({ fileId: existentes.data.files[0].id!, media });
     } else {
       await drive.files.create({
-        requestBody: { name: opts.nombreArchivo, parents: [ingresosId] },
+        requestBody: { name: opts.nombreArchivo, parents: [carpetaId] },
         media,
         fields: "id",
       });
     }
 
-    return { ok: true, carpeta: `Lindilla/cuentas/${anio}/centroveo/${trimestre}/ingresos` };
+    return { ok: true, carpeta: `Lindilla/${opts.carpetas.join("/")}` };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error desconocido subiendo a Drive." };
   }
+}
+
+// Sube el PDF de una factura de Centroveo a cuentas/<año>/centroveo/<trimestre>/ingresos
+export async function subirFacturaCentroveoADrive(opts: { pdf: Buffer; nombreArchivo: string; fecha: Date }): Promise<SubidaResultado> {
+  const anio = String(opts.fecha.getFullYear());
+  const trimestre = trimestreDe(opts.fecha);
+  return subirADrive({
+    pdf: opts.pdf,
+    nombreArchivo: opts.nombreArchivo,
+    carpetas: ["cuentas", anio, "centroveo", trimestre, "ingresos"],
+  });
+}
+
+// Sube el PDF de una factura de Lindilla (gorros) a cuentas/<año>/<trimestre>/Ingresos sociedad
+export async function subirFacturaLindillaADrive(opts: { pdf: Buffer; nombreArchivo: string; fecha: Date }): Promise<SubidaResultado> {
+  const anio = String(opts.fecha.getFullYear());
+  const trimestre = trimestreDe(opts.fecha);
+  return subirADrive({
+    pdf: opts.pdf,
+    nombreArchivo: opts.nombreArchivo,
+    carpetas: ["cuentas", anio, trimestre, "Ingresos sociedad"],
+  });
 }

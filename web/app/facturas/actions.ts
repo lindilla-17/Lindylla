@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { generarFacturaLindillaPdf, type LineaPdf, type ParcialPdf } from "@/lib/facturaLindillaPdf";
+import { subirFacturaLindillaADrive } from "@/lib/googleDrive";
 
 // Alterna el estado de cobro de una factura (Pagada <-> Pendiente).
 export async function toggleFacturaPagada(id: string) {
@@ -38,6 +40,63 @@ export async function siguienteNumeroFactura(): Promise<string> {
     }
   }
   return `${yy}${String(max + 1).padStart(2, "0")}`;
+}
+
+// lineasJson puede ser un array de líneas, o { lineas, parcial } en facturas de adelanto/resto
+function parseLineasJson(json: string | null, fallback: LineaPdf): { lineas: LineaPdf[]; parcial: ParcialPdf } {
+  if (!json) return { lineas: [fallback], parcial: null };
+  try {
+    const data = JSON.parse(json);
+    if (Array.isArray(data)) return { lineas: data, parcial: null };
+    return { lineas: data.lineas ?? [fallback], parcial: data.parcial ?? null };
+  } catch {
+    return { lineas: [fallback], parcial: null };
+  }
+}
+
+// Genera el PDF de una factura de Lindilla y lo sube a Drive; si algo falla
+// (credenciales no configuradas, sin conexión...) NO rompe la creación de la
+// factura: se deja anotado en "notas" para que Mercedes sepa que tiene que
+// guardarla a mano.
+async function guardarFacturaLindillaEnDrive(facturaId: string) {
+  try {
+    const f = await prisma.factura.findUnique({ where: { id: facturaId }, include: { empresa: true } });
+    if (!f) return;
+
+    const { lineas, parcial } = parseLineasJson(f.lineasJson, {
+      concepto: f.concepto ?? "Gorros quirófano personalizados",
+      cantidad: 1,
+      precioUnitario: f.neto,
+    });
+
+    const nombreArchivo = `${f.numero}.pdf`;
+    const pdf = await generarFacturaLindillaPdf({
+      numero: f.numero,
+      fecha: f.fecha,
+      clienteNombre: f.empresa.nombre,
+      clienteDireccion: f.empresa.direccion,
+      clienteCif: f.empresa.cif,
+      lineas,
+      neto: f.neto,
+      iva: f.iva,
+      total: f.total,
+      parcial,
+    });
+
+    const resultado = await subirFacturaLindillaADrive({ pdf, nombreArchivo, fecha: f.fecha });
+    if (resultado.ok) {
+      await prisma.factura.update({ where: { id: facturaId }, data: { archivo: nombreArchivo } });
+    } else {
+      const aviso = `Guardado automático en Drive pendiente: ${resultado.error}`;
+      await prisma.factura.update({
+        where: { id: facturaId },
+        data: { notas: f.notas ? `${f.notas} — ${aviso}` : aviso },
+      });
+    }
+  } catch (e) {
+    // No debe romper el flujo de creación/edición de la factura bajo ninguna circunstancia.
+    console.error("Error guardando factura de Lindilla en Drive:", e);
+  }
 }
 
 // Crea una factura desde el formulario y devuelve su id para ir a imprimirla.
@@ -85,6 +144,8 @@ export async function crearFactura(input: {
       notas: "Creada desde la web",
     },
   });
+
+  await guardarFacturaLindillaEnDrive(factura.id);
 
   revalidatePath("/facturas");
   revalidatePath("/finanzas");
@@ -149,6 +210,8 @@ export async function actualizarFactura(
       lineasJson: JSON.stringify(lineas),
     },
   });
+
+  await guardarFacturaLindillaEnDrive(id);
 
   revalidatePath("/facturas");
   revalidatePath("/finanzas");
