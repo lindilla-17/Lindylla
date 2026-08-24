@@ -53,3 +53,6 @@ google-drive-key.json
 oauth-credentials.txt
 oauth-credentials.json
 google-refresh-token.json
+
+.vercel
+.env*
