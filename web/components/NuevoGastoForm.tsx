@@ -56,10 +56,17 @@ export function NuevoGastoForm() {
     formData.set("iva", iva || "0");
     if (foto) formData.set("archivo", foto);
 
-    const r = await crearGasto(formData);
-    setEnviando(false);
-    if (!r.ok) return setError(r.error);
-    router.push("/gastos");
+    try {
+      const r = await crearGasto(formData);
+      if (!r.ok) {
+        setEnviando(false);
+        return setError(r.error);
+      }
+      router.push("/gastos");
+    } catch {
+      setEnviando(false);
+      setError("No se ha podido guardar. Comprueba la conexión (si es una foto muy grande, prueba con menos calidad) e inténtalo de nuevo.");
+    }
   }
 
   const inputCls =
