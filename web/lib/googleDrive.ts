@@ -79,10 +79,10 @@ function trimestreDe(fecha: Date): string {
 
 export type SubidaResultado = { ok: true; carpeta: string } | { ok: false; error: string };
 
-// Sube un PDF a una ruta de carpetas dentro de "Lindilla" en Drive, creando
+// Sube un archivo a una ruta de carpetas dentro de "Lindilla" en Drive, creando
 // las que falten. `carpetas` es la ruta relativa, ej. ["cuentas", "2026",
 // "centroveo", "3º trimestre", "ingresos"].
-async function subirADrive(opts: { pdf: Buffer; nombreArchivo: string; carpetas: string[] }): Promise<SubidaResultado> {
+async function subirADrive(opts: { pdf: Buffer; nombreArchivo: string; carpetas: string[]; mimeType?: string }): Promise<SubidaResultado> {
   const drive = getDrive();
   if (!drive) return { ok: false, error: "Credenciales de Google Drive no configuradas." };
 
@@ -98,7 +98,7 @@ async function subirADrive(opts: { pdf: Buffer; nombreArchivo: string; carpetas:
       fields: "files(id)",
     });
 
-    const media = { mimeType: "application/pdf", body: Readable.from(opts.pdf) };
+    const media = { mimeType: opts.mimeType ?? "application/pdf", body: Readable.from(opts.pdf) };
 
     if (existentes.data.files && existentes.data.files.length > 0) {
       await drive.files.update({ fileId: existentes.data.files[0].id!, media });
@@ -135,5 +135,25 @@ export async function subirFacturaLindillaADrive(opts: { pdf: Buffer; nombreArch
     pdf: opts.pdf,
     nombreArchivo: opts.nombreArchivo,
     carpetas: ["cuentas", anio, trimestre, "Ingresos sociedad"],
+  });
+}
+
+// Sube la foto/archivo de un gasto de Lindilla (gorros) a
+// cuentas/<año>/<trimestre>/Gastos sociedad ó Gastos mios, según corresponda.
+export async function subirGastoLindillaADrive(opts: {
+  archivo: Buffer;
+  nombreArchivo: string;
+  fecha: Date;
+  mimeType: string;
+  tipo: "sociedad" | "mios";
+}): Promise<SubidaResultado> {
+  const anio = String(opts.fecha.getFullYear());
+  const trimestre = trimestreDe(opts.fecha);
+  const carpetaGasto = opts.tipo === "mios" ? "Gastos mios" : "Gastos sociedad";
+  return subirADrive({
+    pdf: opts.archivo,
+    nombreArchivo: opts.nombreArchivo,
+    carpetas: ["cuentas", anio, trimestre, carpetaGasto],
+    mimeType: opts.mimeType,
   });
 }
