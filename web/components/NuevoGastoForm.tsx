@@ -4,6 +4,30 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { crearGasto } from "@/app/gastos/actions";
 
+// Reduce la foto del móvil (a veces 10-20MB en un iPhone reciente) a un
+// tamaño manejable antes de subirla, sin que Mercedes tenga que tocar nada
+// en los ajustes de la cámara. 1800px de lado más largo es de sobra para
+// leer un recibo o factura.
+async function comprimirImagen(file: File, maxLado = 1800, calidad = 0.75): Promise<File> {
+  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const escala = Math.min(1, maxLado / Math.max(bitmap.width, bitmap.height));
+  const ancho = Math.round(bitmap.width * escala);
+  const alto = Math.round(bitmap.height * escala);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = ancho;
+  canvas.height = alto;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return file;
+  ctx.drawImage(bitmap, 0, 0, ancho, alto);
+
+  const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", calidad));
+  if (!blob || blob.size >= file.size) return file;
+
+  const nombre = file.name.replace(/\.\w+$/, "") + ".jpg";
+  return new File([blob], nombre, { type: "image/jpeg" });
+}
+
 const CATEGORIAS = [
   { value: "MATERIAL", label: "Material" },
   { value: "PERSONAL", label: "Personal" },
@@ -34,7 +58,14 @@ export function NuevoGastoForm() {
   const total = Math.round((num(neto) + num(iva)) * 100) / 100;
   const eur = (n: number) => n.toLocaleString("es-ES", { minimumFractionDigits: 2 }) + " €";
 
-  function elegirFoto(file: File | null) {
+  async function elegirFoto(file: File | null) {
+    if (file && file.type.startsWith("image/")) {
+      try {
+        file = await comprimirImagen(file);
+      } catch {
+        // si algo falla al comprimir, seguimos con la foto original
+      }
+    }
     setFoto(file);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(file ? URL.createObjectURL(file) : null);
