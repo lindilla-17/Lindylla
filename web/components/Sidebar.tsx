@@ -30,11 +30,12 @@ const nav = [
   { href: "/centroveo/agenda", label: "Agenda", icon: ICON.agenda },
 ];
 
-// Los 5 accesos más usados (barra inferior del móvil)
+// Accesos más usados (barra inferior del móvil)
 const movil = [
   { href: "/", label: "Panel", icon: ICON.panel },
   { href: "/finanzas", label: "Finanzas", icon: ICON.finanzas },
   { href: "/facturas", label: "Facturas", icon: ICON.facturas },
+  { href: "/gastos", label: "Gastos", icon: ICON.gastos },
   { href: "/centroveo", label: "Centroveo", icon: ICON.centroveo },
   { href: "/centroveo/agenda", label: "Agenda", icon: ICON.agenda },
 ];
