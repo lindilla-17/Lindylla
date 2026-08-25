@@ -32,6 +32,7 @@ const CATEGORIAS = [
   { value: "MATERIAL", label: "Material" },
   { value: "PERSONAL", label: "Personal" },
   { value: "LOGISTICA", label: "Logística" },
+  { value: "GASOLINA", label: "Gasolina" },
   { value: "CONGRESO", label: "Congreso" },
   { value: "GENERAL", label: "General" },
 ];

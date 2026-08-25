@@ -187,7 +187,7 @@ model CentroveoGasto {
 model Gasto {
   id               String   @id @default(cuid())
   concepto         String
-  categoria        String   @default("GENERAL") // MATERIAL | PERSONAL | LOGISTICA | CONGRESO | GENERAL
+  categoria        String   @default("GENERAL") // MATERIAL | PERSONAL | LOGISTICA | GASOLINA | CONGRESO | GENERAL
   tipo             String   @default("SOCIEDAD") // SOCIEDAD | MIOS — determina la carpeta de Drive (Gastos sociedad / Gastos mios)
   proveedor        String?
   fecha            DateTime @default(now())
