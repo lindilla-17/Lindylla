@@ -63,7 +63,13 @@ export default async function GastosPage() {
                     <td className="text-right whitespace-nowrap muted">{euroExacto(g.iva)}</td>
                     <td className="text-right font-semibold whitespace-nowrap">{euroExacto(g.importe)}</td>
                     <td className="text-[12px]">
-                      {g.archivo ? <span className="text-[var(--tone-green)]">✓ {g.archivo}</span> : <span className="muted-2">—</span>}
+                      {g.archivo ? (
+                        <span className="text-[var(--tone-green)]">✓ {g.archivo}</span>
+                      ) : g.notas ? (
+                        <span className="text-[var(--tone-rose)]" title={g.notas}>⚠ No subida</span>
+                      ) : (
+                        <span className="muted-2">—</span>
+                      )}
                     </td>
                     <td>
                       <Badge variant={g.estado === "PAGADO" ? "green" : "amber"}>

@@ -95,9 +95,18 @@ export async function crearGasto(formData: FormData): Promise<{ ok: true; id: st
 
       if (resultado.ok) {
         await prisma.gasto.update({ where: { id: gasto.id }, data: { archivo: nombreArchivo } });
+      } else {
+        await prisma.gasto.update({
+          where: { id: gasto.id },
+          data: { notas: `No se pudo subir la foto a Drive: ${resultado.error}. Puedes subirla a mano a la carpeta de Gastos de Drive.` },
+        });
       }
     } catch (e) {
       console.error("Error guardando justificante de gasto en Drive:", e);
+      await prisma.gasto.update({
+        where: { id: gasto.id },
+        data: { notas: "No se pudo subir la foto a Drive (fallo inesperado). Puedes subirla a mano a la carpeta de Gastos de Drive." },
+      });
     }
   }
 

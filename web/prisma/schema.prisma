@@ -198,5 +198,6 @@ model Gasto {
   estado           String   @default("PENDIENTE") // PAGADO | PENDIENTE
   fechaPago        DateTime?
   archivo          String? // justificante en la carpeta de cuentas
+  notas            String? // ej. aviso si falló la subida del justificante a Drive
   createdAt        DateTime @default(now())
 }
