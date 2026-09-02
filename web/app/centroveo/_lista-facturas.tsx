@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { euro, euroExacto, fecha } from "@/lib/format";
 import { Page, PageHeader, StatCard, Panel, Badge, ActionLink, Empty } from "@/components/ui";
 import { CentroveoToggle, CentroveoBorrar } from "@/components/CentroveoControles";
+import { trimestreDeFecha } from "@/lib/fechas";
+import { FiltroTrimestre } from "@/components/FiltroTrimestre";
 import Link from "next/link";
 
 // Listado compartido de facturas emitidas de Centroveo, filtrado por tipo.
@@ -11,16 +13,41 @@ export async function ListaFacturasCentroveo({
   titulo,
   subtitulo,
   etiquetaIva,
+  basePath,
+  searchParams,
 }: {
   tipo: "LENTES" | "PROFESIONAL";
   titulo: string;
   subtitulo: string;
   etiquetaIva: string;
+  basePath: string;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const facturas = await prisma.centroveoFactura.findMany({
+  const params = await searchParams;
+  const todas = await prisma.centroveoFactura.findMany({
     where: { tipo },
     orderBy: { fecha: "desc" },
   });
+
+  const anos = [...new Set(todas.map((f) => f.fecha.getFullYear()))].sort((a, b) => b - a);
+  const hoy = new Date();
+  const sinFiltros = !params.ano && !params.trimestre;
+  const anoActualTieneDatos = anos.includes(hoy.getFullYear());
+
+  const anoParam = typeof params.ano === "string" ? parseInt(params.ano) : null;
+  const anoSel = anoParam && anos.includes(anoParam) ? anoParam : sinFiltros && anoActualTieneDatos ? hoy.getFullYear() : anos[0] ?? hoy.getFullYear();
+
+  const trimestreParam = params.trimestre;
+  const trimestreSel =
+    trimestreParam === "todos"
+      ? null
+      : typeof trimestreParam === "string" && ["1", "2", "3", "4"].includes(trimestreParam)
+        ? parseInt(trimestreParam)
+        : sinFiltros && anoActualTieneDatos
+          ? trimestreDeFecha(hoy)
+          : null;
+
+  const facturas = todas.filter((f) => f.fecha.getFullYear() === anoSel && (trimestreSel === null || trimestreDeFecha(f.fecha) === trimestreSel));
 
   const neto = facturas.reduce((s, f) => s + f.neto, 0);
   const iva = facturas.reduce((s, f) => s + f.iva, 0);
@@ -43,6 +70,8 @@ export async function ListaFacturasCentroveo({
           </Link>
         )}
       </div>
+
+      <FiltroTrimestre basePath={basePath} anos={anos} anoSel={anoSel} trimestreSel={trimestreSel} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
         <StatCard label="Base sin IVA" value={euro(neto)} tone="sky" sub={`${facturas.length} factura(s)`} />

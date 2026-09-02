@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { euro, euroExacto, fecha } from "@/lib/format";
 import { Page, PageHeader, StatCard, Panel, Badge, ActionLink, Empty } from "@/components/ui";
 import { GastoToggle, GastoBorrar } from "@/components/GastoControles";
+import { trimestreDeFecha } from "@/lib/fechas";
+import { FiltroTrimestre } from "@/components/FiltroTrimestre";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +19,31 @@ export default async function GastosPage({
 
   const todos = await prisma.gasto.findMany({ orderBy: { fecha: "desc" } });
   const pendientesFoto = todos.filter((g) => !g.archivo);
-  const gastos = soloPendientesFoto ? pendientesFoto : todos;
+
+  // Años disponibles y año/trimestre seleccionados. Vista principal:
+  // trimestre actual por defecto. "Pendientes de foto" ignora el periodo:
+  // busca en todos los años a la vez, para encontrar justificantes sueltos.
+  const anos = [...new Set(todos.map((g) => g.fecha.getFullYear()))].sort((a, b) => b - a);
+  const hoy = new Date();
+  const sinFiltros = !params.ano && !params.trimestre;
+  const anoActualTieneDatos = anos.includes(hoy.getFullYear());
+
+  const anoParam = typeof params.ano === "string" ? parseInt(params.ano) : null;
+  const anoSel = anoParam && anos.includes(anoParam) ? anoParam : sinFiltros && anoActualTieneDatos ? hoy.getFullYear() : anos[0] ?? hoy.getFullYear();
+
+  const trimestreParam = params.trimestre;
+  const trimestreSel =
+    trimestreParam === "todos"
+      ? null
+      : typeof trimestreParam === "string" && ["1", "2", "3", "4"].includes(trimestreParam)
+        ? parseInt(trimestreParam)
+        : sinFiltros && anoActualTieneDatos
+          ? trimestreDeFecha(hoy)
+          : null;
+
+  const gastos = soloPendientesFoto
+    ? pendientesFoto
+    : todos.filter((g) => g.fecha.getFullYear() === anoSel && (trimestreSel === null || trimestreDeFecha(g.fecha) === trimestreSel));
 
   const neto = gastos.reduce((s, g) => s + g.neto, 0);
   const iva = gastos.reduce((s, g) => s + g.iva, 0);
@@ -32,20 +58,10 @@ export default async function GastosPage({
         action={<ActionLink href="/gastos/nueva">+ Nuevo gasto</ActionLink>}
       />
 
-      <div className="mb-4 flex items-center gap-2 flex-wrap">
+      <div className="mb-4">
         <Link
-          href="/gastos"
-          className={`px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-colors ${
-            !soloPendientesFoto
-              ? "bg-[var(--accent-soft)] border-[rgba(78,143,132,.4)] text-[var(--brand-teal-dark)]"
-              : "border-[var(--border)] muted hover:bg-[var(--surface-2)]"
-          }`}
-        >
-          Todos
-        </Link>
-        <Link
-          href="/gastos?foto=pendiente"
-          className={`px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-colors ${
+          href={soloPendientesFoto ? "/gastos" : "/gastos?foto=pendiente"}
+          className={`inline-block px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-colors ${
             soloPendientesFoto
               ? "bg-[var(--accent-soft)] border-[rgba(78,143,132,.4)] text-[var(--brand-teal-dark)]"
               : "border-[var(--border)] muted hover:bg-[var(--surface-2)]"
@@ -54,6 +70,10 @@ export default async function GastosPage({
           📷 Pendientes de foto ({pendientesFoto.length})
         </Link>
       </div>
+
+      {!soloPendientesFoto && (
+        <FiltroTrimestre basePath="/gastos" anos={anos} anoSel={anoSel} trimestreSel={trimestreSel} />
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
         <StatCard label="Base sin IVA" value={euro(neto)} tone="sky" sub={`${gastos.length} gasto(s)`} />

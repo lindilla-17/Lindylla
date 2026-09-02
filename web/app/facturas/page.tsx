@@ -5,6 +5,8 @@ import { estadoFactura } from "@/lib/estados";
 import { PagadaToggle } from "@/components/PagadaToggle";
 import { BorrarFacturaBtn } from "@/components/BorrarFacturaBtn";
 import { estaEnCuentas, estaEnCarpetaEmpresa } from "@/lib/archivos";
+import { trimestreDeFecha } from "@/lib/fechas";
+import { FiltroTrimestre } from "@/components/FiltroTrimestre";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -20,17 +22,34 @@ export default async function FacturasPage({
     orderBy: { fecha: "desc" },
   });
 
-  // Años disponibles (para las pestañas) y año seleccionado
+  // Años disponibles (para las pestañas) y año/trimestre seleccionados.
+  // Vista principal: trimestre. Por defecto, el trimestre actual del año
+  // actual (o el año más reciente con datos si el actual no tiene nada).
   const anos = [...new Set(todas.map((f) => f.fecha.getFullYear()))].sort((a, b) => b - a);
+  const hoy = new Date();
+  const sinFiltros = !params.ano && !params.trimestre;
+  const anoActualTieneDatos = anos.includes(hoy.getFullYear());
+
   const anoParam = typeof params.ano === "string" ? parseInt(params.ano) : null;
-  const anoSel = anoParam && anos.includes(anoParam) ? anoParam : null;
+  const anoSel = anoParam && anos.includes(anoParam) ? anoParam : sinFiltros && anoActualTieneDatos ? hoy.getFullYear() : anos[0] ?? hoy.getFullYear();
+
+  const trimestreParam = params.trimestre;
+  const trimestreSel =
+    trimestreParam === "todos"
+      ? null
+      : typeof trimestreParam === "string" && ["1", "2", "3", "4"].includes(trimestreParam)
+        ? parseInt(trimestreParam)
+        : sinFiltros && anoActualTieneDatos
+          ? trimestreDeFecha(hoy)
+          : null;
 
   // Ordenación: por fecha (defecto), empresa o número
   const orden = typeof params.orden === "string" && ["fecha", "empresa", "numero"].includes(params.orden) ? params.orden : "fecha";
   const dir = params.dir === "asc" ? "asc" : "desc";
   const mult = dir === "asc" ? 1 : -1;
 
-  const facturas = (anoSel ? todas.filter((f) => f.fecha.getFullYear() === anoSel) : todas)
+  const facturas = todas
+    .filter((f) => f.fecha.getFullYear() === anoSel && (trimestreSel === null || trimestreDeFecha(f.fecha) === trimestreSel))
     .slice()
     .sort((a, b) => {
       if (orden === "empresa") return mult * a.empresa.nombre.localeCompare(b.empresa.nombre, "es");
@@ -38,11 +57,12 @@ export default async function FacturasPage({
       return mult * (a.fecha.getTime() - b.fecha.getTime());
     });
 
-  // Construye el enlace de cabecera conservando el año; alterna asc/desc al repetir clic
+  // Construye el enlace de cabecera conservando año/trimestre; alterna asc/desc al repetir clic
   const linkOrden = (campo: string) => {
     const nuevaDir = orden === campo && dir === "desc" ? "asc" : "desc";
     const q = new URLSearchParams();
-    if (anoSel) q.set("ano", String(anoSel));
+    q.set("ano", String(anoSel));
+    q.set("trimestre", trimestreSel ? String(trimestreSel) : "todos");
     q.set("orden", campo);
     q.set("dir", campo === orden ? nuevaDir : "desc");
     return `/facturas?${q.toString()}`;
@@ -63,16 +83,15 @@ export default async function FacturasPage({
         action={<ActionLink href="/facturas/nueva">+ Nueva factura</ActionLink>}
       />
 
-      {/* Pestañas por año */}
-      <div className="flex items-center gap-2 mb-5 flex-wrap">
-        <YearTab href="/facturas" label="Todos" active={anoSel === null} />
-        {anos.map((a) => (
-          <YearTab key={a} href={`/facturas?ano=${a}`} label={String(a)} active={anoSel === a} />
-        ))}
-      </div>
+      <FiltroTrimestre basePath="/facturas" anos={anos} anoSel={anoSel} trimestreSel={trimestreSel} extraParams={{ orden, dir }} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-5">
-        <StatCard label={`Base sin IVA ${anoSel ?? "total"}`} value={euro(neto)} tone="sky" sub={`${facturas.length} facturas`} />
+        <StatCard
+          label={`Base sin IVA ${trimestreSel ? `${trimestreSel}T ${anoSel}` : anoSel}`}
+          value={euro(neto)}
+          tone="sky"
+          sub={`${facturas.length} facturas`}
+        />
         <StatCard label="IVA repercutido" value={euro(iva)} tone="indigo" sub="solo ventas España (21%)" />
         <StatCard label="Total con IVA" value={euro(total)} />
         <StatCard label="Cobrado" value={euro(cobrado)} tone="green" />
@@ -144,21 +163,6 @@ export default async function FacturasPage({
         </div>
       </Panel>
     </Page>
-  );
-}
-
-function YearTab({ href, label, active }: { href: string; label: string; active: boolean }) {
-  return (
-    <Link
-      href={href}
-      className={`px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-colors ${
-        active
-          ? "bg-[var(--accent-soft)] border-[rgba(78,143,132,.4)] text-[var(--brand-teal-dark)]"
-          : "border-[var(--border)] muted hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
-      }`}
-    >
-      {label}
-    </Link>
   );
 }
 

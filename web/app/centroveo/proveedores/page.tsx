@@ -2,13 +2,40 @@ import { prisma } from "@/lib/prisma";
 import { euro, euroExacto, fecha } from "@/lib/format";
 import { Page, PageHeader, StatCard, Panel, Badge, ActionLink, Empty } from "@/components/ui";
 import { CentroveoToggle, CentroveoBorrar } from "@/components/CentroveoControles";
+import { trimestreDeFecha } from "@/lib/fechas";
+import { FiltroTrimestre } from "@/components/FiltroTrimestre";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 // Centroveo · Facturas de proveedores (compras de lentes, material óptico...)
-export default async function ProveedoresPage() {
-  const gastos = await prisma.centroveoGasto.findMany({ orderBy: { fecha: "desc" } });
+export default async function ProveedoresPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const todos = await prisma.centroveoGasto.findMany({ orderBy: { fecha: "desc" } });
+
+  const anos = [...new Set(todos.map((g) => g.fecha.getFullYear()))].sort((a, b) => b - a);
+  const hoy = new Date();
+  const sinFiltros = !params.ano && !params.trimestre;
+  const anoActualTieneDatos = anos.includes(hoy.getFullYear());
+
+  const anoParam = typeof params.ano === "string" ? parseInt(params.ano) : null;
+  const anoSel = anoParam && anos.includes(anoParam) ? anoParam : sinFiltros && anoActualTieneDatos ? hoy.getFullYear() : anos[0] ?? hoy.getFullYear();
+
+  const trimestreParam = params.trimestre;
+  const trimestreSel =
+    trimestreParam === "todos"
+      ? null
+      : typeof trimestreParam === "string" && ["1", "2", "3", "4"].includes(trimestreParam)
+        ? parseInt(trimestreParam)
+        : sinFiltros && anoActualTieneDatos
+          ? trimestreDeFecha(hoy)
+          : null;
+
+  const gastos = todos.filter((g) => g.fecha.getFullYear() === anoSel && (trimestreSel === null || trimestreDeFecha(g.fecha) === trimestreSel));
 
   const neto = gastos.reduce((s, g) => s + g.neto, 0);
   const iva = gastos.reduce((s, g) => s + g.iva, 0);
@@ -26,6 +53,8 @@ export default async function ProveedoresPage() {
       <div className="mb-4">
         <Link href="/centroveo" className="text-[13px] text-[var(--brand-teal-dark)] hover:underline">← Volver a Centroveo</Link>
       </div>
+
+      <FiltroTrimestre basePath="/centroveo/proveedores" anos={anos} anoSel={anoSel} trimestreSel={trimestreSel} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
         <StatCard label="Base sin IVA" value={euro(neto)} tone="sky" sub={`${gastos.length} factura(s)`} />
