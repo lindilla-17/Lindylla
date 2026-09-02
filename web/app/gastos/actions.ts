@@ -79,39 +79,78 @@ export async function crearGasto(formData: FormData): Promise<{ ok: true; id: st
   });
 
   if (archivoFile instanceof File && archivoFile.size > 0) {
-    try {
-      const buffer = Buffer.from(await archivoFile.arrayBuffer());
-      const mimeType = archivoFile.type || "image/jpeg";
-      const extension = extensionDe(mimeType);
-      const nombreArchivo = nombreArchivoGasto(fecha, proveedor, concepto, extension);
-
-      const resultado = await subirGastoLindillaADrive({
-        archivo: buffer,
-        nombreArchivo,
-        fecha,
-        mimeType,
-        tipo: tipo === "MIOS" ? "mios" : "sociedad",
-      });
-
-      if (resultado.ok) {
-        await prisma.gasto.update({ where: { id: gasto.id }, data: { archivo: nombreArchivo } });
-      } else {
-        await prisma.gasto.update({
-          where: { id: gasto.id },
-          data: { notas: `No se pudo subir la foto a Drive: ${resultado.error}. Puedes subirla a mano a la carpeta de Gastos de Drive.` },
-        });
-      }
-    } catch (e) {
-      console.error("Error guardando justificante de gasto en Drive:", e);
-      await prisma.gasto.update({
-        where: { id: gasto.id },
-        data: { notas: "No se pudo subir la foto a Drive (fallo inesperado). Puedes subirla a mano a la carpeta de Gastos de Drive." },
-      });
-    }
+    await subirJustificanteGasto(gasto.id, archivoFile, fecha, proveedor, concepto, tipo);
   }
 
   revalidatePath("/gastos");
   revalidatePath("/finanzas");
   revalidatePath("/");
   return { ok: true, id: gasto.id };
+}
+
+async function subirJustificanteGasto(
+  gastoId: string,
+  archivoFile: File,
+  fecha: Date,
+  proveedor: string,
+  concepto: string,
+  tipo: string
+) {
+  try {
+    const buffer = Buffer.from(await archivoFile.arrayBuffer());
+    const mimeType = archivoFile.type || "image/jpeg";
+    const extension = extensionDe(mimeType);
+    const nombreArchivo = nombreArchivoGasto(fecha, proveedor, concepto, extension);
+
+    const resultado = await subirGastoLindillaADrive({
+      archivo: buffer,
+      nombreArchivo,
+      fecha,
+      mimeType,
+      tipo: tipo === "MIOS" ? "mios" : "sociedad",
+    });
+
+    if (resultado.ok) {
+      await prisma.gasto.update({ where: { id: gastoId }, data: { archivo: nombreArchivo, notas: null } });
+      return { ok: true as const };
+    } else {
+      const aviso = `No se pudo subir la foto a Drive: ${resultado.error}. Puedes subirla a mano a la carpeta de Gastos de Drive.`;
+      await prisma.gasto.update({ where: { id: gastoId }, data: { notas: aviso } });
+      return { ok: false as const, error: aviso };
+    }
+  } catch (e) {
+    console.error("Error guardando justificante de gasto en Drive:", e);
+    const aviso = "No se pudo subir la foto a Drive (fallo inesperado). Puedes subirla a mano a la carpeta de Gastos de Drive.";
+    await prisma.gasto.update({ where: { id: gastoId }, data: { notas: aviso } });
+    return { ok: false as const, error: aviso };
+  }
+}
+
+// Adjunta (o sustituye) el justificante de un gasto YA EXISTENTE, sin crear
+// un gasto nuevo — pensado para reintentar la subida de fotos que fallaron.
+export async function subirFotoGastoExistente(
+  gastoId: string,
+  formData: FormData
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const gasto = await prisma.gasto.findUnique({ where: { id: gastoId } });
+  if (!gasto) return { ok: false, error: "No se encuentra ese gasto." };
+
+  const archivoFile = formData.get("archivo");
+  if (!(archivoFile instanceof File) || archivoFile.size === 0) {
+    return { ok: false, error: "Elige una foto o archivo." };
+  }
+
+  const resultado = await subirJustificanteGasto(
+    gastoId,
+    archivoFile,
+    gasto.fecha,
+    gasto.proveedor ?? "",
+    gasto.concepto,
+    gasto.tipo
+  );
+
+  revalidatePath("/gastos");
+  revalidatePath("/finanzas");
+  revalidatePath("/");
+  return resultado.ok ? { ok: true } : { ok: false, error: resultado.error };
 }

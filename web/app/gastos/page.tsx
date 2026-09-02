@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { euro, euroExacto, fecha } from "@/lib/format";
 import { Page, PageHeader, StatCard, Panel, Badge, ActionLink, Empty } from "@/components/ui";
 import { GastoToggle, GastoBorrar } from "@/components/GastoControles";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -65,10 +66,15 @@ export default async function GastosPage() {
                     <td className="text-[12px]">
                       {g.archivo ? (
                         <span className="text-[var(--tone-green)]">✓ {g.archivo}</span>
-                      ) : g.notas ? (
-                        <span className="text-[var(--tone-rose)]" title={g.notas}>⚠ No subida</span>
                       ) : (
-                        <span className="muted-2">—</span>
+                        <div className="flex flex-col gap-1">
+                          {g.notas && (
+                            <span className="text-[var(--tone-rose)]" title={g.notas}>⚠ No subida</span>
+                          )}
+                          <Link href={`/gastos/${g.id}/foto`} className="text-[var(--brand-teal-dark)] hover:underline">
+                            + Subir foto
+                          </Link>
+                        </div>
                       )}
                     </td>
                     <td>
