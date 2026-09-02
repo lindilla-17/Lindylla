@@ -7,8 +7,17 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 // Gastos de Lindilla (gorros): materiales, personal, logística, congresos...
-export default async function GastosPage() {
-  const gastos = await prisma.gasto.findMany({ orderBy: { fecha: "desc" } });
+export default async function GastosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const soloPendientesFoto = params.foto === "pendiente";
+
+  const todos = await prisma.gasto.findMany({ orderBy: { fecha: "desc" } });
+  const pendientesFoto = todos.filter((g) => !g.archivo);
+  const gastos = soloPendientesFoto ? pendientesFoto : todos;
 
   const neto = gastos.reduce((s, g) => s + g.neto, 0);
   const iva = gastos.reduce((s, g) => s + g.iva, 0);
@@ -22,6 +31,29 @@ export default async function GastosPage() {
         subtitle="Gastos de Lindilla (gorros): material, personal, logística, congresos..."
         action={<ActionLink href="/gastos/nueva">+ Nuevo gasto</ActionLink>}
       />
+
+      <div className="mb-4 flex items-center gap-2 flex-wrap">
+        <Link
+          href="/gastos"
+          className={`px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-colors ${
+            !soloPendientesFoto
+              ? "bg-[var(--accent-soft)] border-[rgba(78,143,132,.4)] text-[var(--brand-teal-dark)]"
+              : "border-[var(--border)] muted hover:bg-[var(--surface-2)]"
+          }`}
+        >
+          Todos
+        </Link>
+        <Link
+          href="/gastos?foto=pendiente"
+          className={`px-4 py-1.5 rounded-full text-[13px] font-semibold border transition-colors ${
+            soloPendientesFoto
+              ? "bg-[var(--accent-soft)] border-[rgba(78,143,132,.4)] text-[var(--brand-teal-dark)]"
+              : "border-[var(--border)] muted hover:bg-[var(--surface-2)]"
+          }`}
+        >
+          📷 Pendientes de foto ({pendientesFoto.length})
+        </Link>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
         <StatCard label="Base sin IVA" value={euro(neto)} tone="sky" sub={`${gastos.length} gasto(s)`} />
