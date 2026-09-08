@@ -75,14 +75,14 @@ export function generarFacturaCentroveoPdf(f: FacturaPdfDatos): Promise<Buffer> 
     doc.fontSize(13).fillColor("#c96f00").text("TOTAL", 350, totTop + 44, { width: 100 });
     doc.fontSize(15).text(euro(f.total), 440, totTop + 42, { width: 105, align: "right" });
 
-    // Pie: datos bancarios (mismos que las facturas de Lindilla)
+    // Pie: datos bancarios (cuenta propia de Centroveo, distinta de la de Lindilla)
     const pieTop = totTop + 110;
     doc.moveTo(50, pieTop).lineTo(545, pieTop).lineWidth(0.5).strokeColor("#d9d2c7").stroke();
     doc.fontSize(11).fillColor("#c96f00").text("DETALLES DEL PAGO", 50, pieTop + 12);
     doc.fontSize(9).fillColor("#16211e");
     doc.text("Nombre del beneficiario: Lindilla S.L.", 50, pieTop + 30);
     doc.text("Nombre del banco: Banco Santander", 50, pieTop + 44);
-    doc.text("Número de cuenta: ES05 0049 4394 2227 1007 1254", 50, pieTop + 58);
+    doc.text("Número de cuenta: ES38 0049 4394 2920 1007 8062", 50, pieTop + 58);
 
     doc.end();
   });

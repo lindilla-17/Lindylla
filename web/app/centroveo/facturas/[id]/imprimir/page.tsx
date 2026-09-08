@@ -126,7 +126,7 @@ export default async function ImprimirCentroveoPage({ params }: { params: Promis
           <div className="font-serif text-[13px] text-[#c96f00] mb-2">DETALLES DEL PAGO</div>
           <div>Nombre del beneficiario: Lindilla S.L.</div>
           <div>Nombre del banco: Banco Santander</div>
-          <div>Número de cuenta: ES05 0049 4394 2227 1007 1254</div>
+          <div>Número de cuenta: ES38 0049 4394 2920 1007 8062</div>
         </div>
       </div>
     </div>
