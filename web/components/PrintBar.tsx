@@ -3,11 +3,19 @@
 import Link from "next/link";
 
 // Barra superior de la vista de impresión (se oculta al imprimir).
-export function PrintBar({ facturaId }: { facturaId?: string }) {
+export function PrintBar({
+  facturaId,
+  volverHref = "/facturas",
+  volverLabel = "← Volver a facturas",
+}: {
+  facturaId?: string;
+  volverHref?: string;
+  volverLabel?: string;
+}) {
   return (
     <div className="no-print flex items-center justify-between mb-5">
-      <Link href="/facturas" className="text-[13px] font-semibold text-[var(--brand-teal-dark)] hover:underline">
-        ← Volver a facturas
+      <Link href={volverHref} className="text-[13px] font-semibold text-[var(--brand-teal-dark)] hover:underline">
+        {volverLabel}
       </Link>
       <div className="flex items-center gap-3">
         {facturaId && (

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { euro, fecha } from "@/lib/format";
-import { Page, PageHeader, StatCard, Panel, Badge, Empty } from "@/components/ui";
+import { Page, PageHeader, StatCard, Panel, Badge, Empty, ActionLink } from "@/components/ui";
 import { estadoPresupuesto, tipoPresupuesto, pedidoCompletado } from "@/lib/estados";
 import Link from "next/link";
 
@@ -34,6 +34,7 @@ export default async function PresupuestosPage({
       <PageHeader
         title="Presupuestos"
         subtitle="Pedidos de gorros y congresos. Un pedido se considera completado cuando tiene su factura."
+        action={<ActionLink href="/presupuestos/nueva">+ Nuevo presupuesto</ActionLink>}
       />
 
       {/* Pestañas por año */}
@@ -53,14 +54,7 @@ export default async function PresupuestosPage({
 
       <Panel title={`Listado (${presupuestos.length})`}>
         {presupuestos.length === 0 ? (
-          <Empty>
-            Todavía no hay presupuestos registrados.
-            <br />
-            <span className="muted-2 text-[13px]">
-              Los datos inventados se han eliminado — aquí solo entrará lo real. El siguiente paso es
-              poder crear presupuestos desde esta pantalla.
-            </span>
-          </Empty>
+          <Empty>Todavía no hay presupuestos registrados. Usa «+ Nuevo presupuesto» para crear el primero.</Empty>
         ) : (
           <div className="overflow-x-auto">
             <table className="tbl">
@@ -74,6 +68,7 @@ export default async function PresupuestosPage({
                   <th className="text-right">Importe</th>
                   <th>Estado</th>
                   <th>Pedido</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -105,6 +100,11 @@ export default async function PresupuestosPage({
                         ) : (
                           <span className="muted-2 text-[13px]">—</span>
                         )}
+                      </td>
+                      <td className="text-right whitespace-nowrap">
+                        <Link href={`/presupuestos/${p.id}/imprimir`} className="text-[13px] text-[var(--brand-teal-dark)] hover:underline">
+                          Ver
+                        </Link>
                       </td>
                     </tr>
                   );

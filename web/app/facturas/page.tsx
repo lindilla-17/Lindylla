@@ -80,7 +80,17 @@ export default async function FacturasPage({
       <PageHeader
         title="Facturas"
         subtitle="Facturas reales por fecha. El icono de carpetas indica si el PDF está en cuentas y en la carpeta de la empresa."
-        action={<ActionLink href="/facturas/nueva">+ Nueva factura</ActionLink>}
+        action={
+          <div className="flex items-center gap-2">
+            <Link
+              href="/presupuestos/nueva"
+              className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] px-3.5 py-2 text-[13px] font-medium muted hover:bg-[var(--surface-2)] hover:text-[var(--text)] transition-colors"
+            >
+              📄 Crear presupuesto
+            </Link>
+            <ActionLink href="/facturas/nueva">+ Nueva factura</ActionLink>
+          </div>
+        }
       />
 
       <FiltroTrimestre basePath="/facturas" anos={anos} anoSel={anoSel} trimestreSel={trimestreSel} extraParams={{ orden, dir }} />
