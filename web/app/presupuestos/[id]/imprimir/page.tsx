@@ -19,7 +19,14 @@ export default async function ImprimirPresupuestoPage({ params }: { params: Prom
 
   return (
     <div className="max-w-[820px] mx-auto px-8 py-6">
-      <PrintBar volverHref="/presupuestos" volverLabel="← Volver a presupuestos" descargarPdfHref={`/presupuestos/${p.id}/pdf`} />
+      <PrintBar
+        volverHref="/presupuestos"
+        volverLabel="← Volver a presupuestos"
+        compartirPdf={{
+          href: `/presupuestos/${p.id}/pdf`,
+          nombreArchivo: `Presupuesto ${p.empresa.nombre} ${p.fecha.toISOString().slice(0, 10)}.pdf`,
+        }}
+      />
 
       {/* --- Hoja de presupuesto --- */}
       <div className="factura-hoja bg-white text-[#16211e] rounded-xl border border-[var(--border)] shadow-sm px-12 py-7 print:border-0 print:shadow-none print:rounded-none">
