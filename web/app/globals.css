@@ -149,5 +149,11 @@ body {
   aside, .no-print { display: none !important; }
   body, .app-bg { background: white !important; }
   main { width: 100% !important; padding-top: 0 !important; padding-bottom: 0 !important; }
-  .factura-hoja { border: none !important; box-shadow: none !important; }
+  .factura-hoja { border: none !important; box-shadow: none !important; page-break-inside: avoid; }
+}
+
+/* Menos margen del navegador al imprimir/guardar PDF: deja más sitio a la
+   hoja de factura/presupuesto para que quepa en una sola página. */
+@page {
+  margin: 10mm;
 }

@@ -19,23 +19,23 @@ export default async function ImprimirPresupuestoPage({ params }: { params: Prom
 
   return (
     <div className="max-w-[820px] mx-auto px-8 py-6">
-      <PrintBar volverHref="/presupuestos" volverLabel="← Volver a presupuestos" />
+      <PrintBar volverHref="/presupuestos" volverLabel="← Volver a presupuestos" descargarPdfHref={`/presupuestos/${p.id}/pdf`} />
 
       {/* --- Hoja de presupuesto --- */}
-      <div className="factura-hoja bg-white text-[#16211e] rounded-xl border border-[var(--border)] shadow-sm px-12 py-10 print:border-0 print:shadow-none print:rounded-none">
+      <div className="factura-hoja bg-white text-[#16211e] rounded-xl border border-[var(--border)] shadow-sm px-12 py-7 print:border-0 print:shadow-none print:rounded-none">
         {/* Cabecera: sin número, es un documento informativo */}
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-[30px] font-serif tracking-tight">Presupuesto</h1>
+            <h1 className="text-[26px] font-serif tracking-tight">Presupuesto</h1>
             <div className="border-t-4 border-[#16211e] w-[420px] mt-1 mb-2" />
             <div className="text-[13px]">{fechaLarga(p.fecha)}</div>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.jpg" alt="Lindilla" className="h-20 w-auto" />
+          <img src="/logo.jpg" alt="Lindilla" className="h-16 w-auto" />
         </div>
 
         {/* Emisor / cliente */}
-        <div className="flex justify-between mt-8 text-[13px] leading-relaxed">
+        <div className="flex justify-between mt-5 text-[13px] leading-relaxed">
           <div>
             <div className="font-bold">{p.empresa.nombre}</div>
             {p.empresa.direccion && <div>{p.empresa.direccion}</div>}
@@ -50,7 +50,7 @@ export default async function ImprimirPresupuestoPage({ params }: { params: Prom
         </div>
 
         {/* Líneas */}
-        <table className="w-full mt-8 text-[13px]">
+        <table className="w-full mt-5 text-[13px]">
           <thead>
             <tr className="border-y-2 border-[#16211e]">
               <th className="text-left py-2 font-semibold w-[110px]">CANTIDAD</th>
@@ -68,8 +68,8 @@ export default async function ImprimirPresupuestoPage({ params }: { params: Prom
                 <td className="py-2.5 px-1 text-right">{(l.cantidad * l.precioUnitario).toLocaleString("es-ES", { minimumFractionDigits: 2 })}</td>
               </tr>
             ))}
-            {p.lineas.length < 4 &&
-              Array.from({ length: 4 - p.lineas.length }).map((_, i) => (
+            {p.lineas.length < 2 &&
+              Array.from({ length: 2 - p.lineas.length }).map((_, i) => (
                 <tr key={`v${i}`} className={(p.lineas.length + i) % 2 === 0 ? "bg-[#faf7f2]" : ""}>
                   <td className="py-2.5">&nbsp;</td><td /><td /><td />
                 </tr>
@@ -78,7 +78,7 @@ export default async function ImprimirPresupuestoPage({ params }: { params: Prom
         </table>
 
         {/* Totales */}
-        <div className="flex justify-end mt-6">
+        <div className="flex justify-end mt-4">
           <div className="w-[280px] text-[13px]">
             <div className="flex justify-between py-1">
               <span className="text-[#5b6b66]">Total neto</span>
@@ -99,14 +99,14 @@ export default async function ImprimirPresupuestoPage({ params }: { params: Prom
 
         {/* Banda de adelanto solicitado, como en las facturas de adelanto/resto */}
         {p.adelantoPct && (
-          <div className="mt-6 flex items-center justify-between bg-[#4e8f84] text-white rounded px-5 py-2.5">
+          <div className="mt-4 flex items-center justify-between bg-[#4e8f84] text-white rounded px-5 py-2">
             <span className="font-semibold text-[14px]">Adelanto solicitado ({p.adelantoPct}%)</span>
             <span className="font-bold text-[16px]">{euro(importeAdelanto)}</span>
           </div>
         )}
 
         {/* Pie: pago e información */}
-        <div className="grid grid-cols-2 gap-8 mt-12 pt-6 border-t border-[#d9d2c7] text-[12px] leading-relaxed">
+        <div className="grid grid-cols-2 gap-8 mt-7 pt-4 border-t border-[#d9d2c7] text-[12px] leading-relaxed">
           <div>
             <div className="font-serif text-[13px] text-[#c96f00] mb-2">DETALLES DEL PAGO</div>
             <div>Nombre del beneficiario: Lindilla S.L.</div>
@@ -122,7 +122,7 @@ export default async function ImprimirPresupuestoPage({ params }: { params: Prom
           </div>
         </div>
 
-        <div className="mt-6 text-[11px] text-center text-[#9a9186]">
+        <div className="mt-3 text-[11px] text-center text-[#9a9186]">
           Presupuesto sin validez fiscal. Precios válidos salvo error tipográfico.
         </div>
       </div>
