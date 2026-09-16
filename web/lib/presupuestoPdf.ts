@@ -43,19 +43,32 @@ export function generarPresupuestoPdf(f: PresupuestoPdfDatos): Promise<Buffer> {
     doc.moveTo(50, 92).lineTo(430, 92).lineWidth(3).strokeColor("#16211e").stroke();
     doc.fontSize(11).text(fechaLarga(f.fecha), 50, 100);
 
-    // Cliente / Emisor
+    // Cliente / Emisor — las líneas se apilan según lo que ocupe cada una
+    // (una dirección larga puede partirse en varias líneas), en vez de
+    // posiciones fijas que se solapaban con direcciones largas.
     const bloqueTop = 150;
-    doc.fontSize(11).fillColor("#16211e").text(f.clienteNombre, 50, bloqueTop, { width: 260 });
-    if (f.clienteDireccion) doc.fontSize(9).text(f.clienteDireccion, 50, bloqueTop + 15, { width: 260 });
-    if (f.clienteCif) doc.fontSize(9).text(`NIF: ${f.clienteCif}`, 50, bloqueTop + 28);
+    let clienteY = bloqueTop;
+    doc.fontSize(11).fillColor("#16211e");
+    doc.text(f.clienteNombre, 50, clienteY, { width: 260 });
+    clienteY += doc.heightOfString(f.clienteNombre, { width: 260 }) + 4;
+    if (f.clienteDireccion) {
+      doc.fontSize(9);
+      doc.text(f.clienteDireccion, 50, clienteY, { width: 260 });
+      clienteY += doc.heightOfString(f.clienteDireccion, { width: 260 }) + 4;
+    }
+    if (f.clienteCif) {
+      doc.fontSize(9).text(`NIF: ${f.clienteCif}`, 50, clienteY, { width: 260 });
+      clienteY += 14;
+    }
 
     doc.fontSize(11).text("Lindilla S.L.", 300, bloqueTop, { width: 245, align: "right" });
     doc.fontSize(9).text("C/Poeta Mª Carlota Rodriguez 31", 300, bloqueTop + 15, { width: 245, align: "right" });
     doc.text("29190 Málaga", 300, bloqueTop + 27, { width: 245, align: "right" });
     doc.fontSize(10).text("NIF B23872617", 300, bloqueTop + 40, { width: 245, align: "right" });
+    const emisorY = bloqueTop + 55;
 
     // Tabla de líneas
-    const tablaTop = bloqueTop + 90;
+    const tablaTop = Math.max(clienteY, emisorY) + 20;
     doc.moveTo(50, tablaTop).lineTo(545, tablaTop).lineWidth(1.5).stroke();
     doc.fontSize(9).fillColor("#16211e");
     doc.text("CANTIDAD", 55, tablaTop + 8, { width: 60 });
