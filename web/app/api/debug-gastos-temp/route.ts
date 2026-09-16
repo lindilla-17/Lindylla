@@ -2,24 +2,17 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const empresas = await prisma.empresa.findMany({
-    where: {
-      OR: [
-        { nombre: { contains: "promed", mode: "insensitive" } },
-        { nombre: { contains: "lopez", mode: "insensitive" } },
-        { nombre: { contains: "López", mode: "insensitive" } },
-        { nombre: { contains: "marin", mode: "insensitive" } },
-        { nombre: { contains: "marín", mode: "insensitive" } },
-        { nombre: { contains: "teresa", mode: "insensitive" } },
-        { nombre: { contains: "sagrario", mode: "insensitive" } },
-        { carpeta: { contains: "promed", mode: "insensitive" } },
-        { carpeta: { contains: "lopez", mode: "insensitive" } },
-        { carpeta: { contains: "marin", mode: "insensitive" } },
-        { carpeta: { contains: "teresa", mode: "insensitive" } },
-        { carpeta: { contains: "sagrario", mode: "insensitive" } },
-      ],
-    },
-  });
-  const total = await prisma.empresa.count();
-  return NextResponse.json({ total, coincidencias: empresas.map((e) => ({ nombre: e.nombre, carpeta: e.carpeta })) });
+  const datos = [
+    { nombre: "Promedwork", carpeta: "Promedwork" },
+    { nombre: "Lopez Marin", carpeta: "lopez marin" },
+    { nombre: "Teresa Sagrario", carpeta: "teresa sagrario" },
+  ];
+  const creadas = [];
+  for (const d of datos) {
+    const existe = await prisma.empresa.findFirst({ where: { nombre: d.nombre } });
+    if (existe) continue;
+    const e = await prisma.empresa.create({ data: { nombre: d.nombre, carpeta: d.carpeta, tipo: "MATRIZ" } });
+    creadas.push(e.nombre);
+  }
+  return NextResponse.json({ creadas });
 }
