@@ -28,7 +28,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   return new NextResponse(new Uint8Array(pdf), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="Presupuesto ${p.empresa.nombre} ${p.fecha.toISOString().slice(0, 10)}.pdf"`,
+      // "inline" (no "attachment"): en el móvil se abre en el visor de PDF de
+      // Safari, que tiene su propio botón de compartir arriba. Con
+      // "attachment" se forzaba la descarga y no había forma de compartirlo.
+      "Content-Disposition": `inline; filename="Presupuesto ${p.empresa.nombre} ${p.fecha.toISOString().slice(0, 10)}.pdf"`,
     },
   });
 }
