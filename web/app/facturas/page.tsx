@@ -93,6 +93,12 @@ export default async function FacturasPage({
         }
       />
 
+      <div className="mb-4">
+        <Link href="/presupuestos" className="text-[13px] text-[var(--brand-teal-dark)] hover:underline">
+          Ver todos los presupuestos →
+        </Link>
+      </div>
+
       <FiltroTrimestre basePath="/facturas" anos={anos} anoSel={anoSel} trimestreSel={trimestreSel} extraParams={{ orden, dir }} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-5">

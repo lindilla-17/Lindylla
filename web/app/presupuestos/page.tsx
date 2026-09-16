@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { euro, fecha } from "@/lib/format";
 import { Page, PageHeader, StatCard, Panel, Badge, Empty, ActionLink } from "@/components/ui";
 import { estadoPresupuesto, tipoPresupuesto, pedidoCompletado } from "@/lib/estados";
+import { BorrarPresupuestoBtn } from "@/components/BorrarPresupuestoBtn";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -102,9 +103,12 @@ export default async function PresupuestosPage({
                         )}
                       </td>
                       <td className="text-right whitespace-nowrap">
-                        <Link href={`/presupuestos/${p.id}/imprimir`} className="text-[13px] text-[var(--brand-teal-dark)] hover:underline">
-                          Ver
-                        </Link>
+                        <div className="flex items-center justify-end gap-3">
+                          <Link href={`/presupuestos/${p.id}/imprimir`} className="text-[13px] text-[var(--brand-teal-dark)] hover:underline">
+                            Ver
+                          </Link>
+                          <BorrarPresupuestoBtn id={p.id} cliente={p.empresa.nombre} />
+                        </div>
                       </td>
                     </tr>
                   );
