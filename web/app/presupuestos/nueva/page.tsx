@@ -5,7 +5,12 @@ import { NuevoPresupuestoForm } from "@/components/NuevoPresupuestoForm";
 export const dynamic = "force-dynamic";
 
 export default async function NuevoPresupuestoPage() {
-  const empresas = await prisma.empresa.findMany({ orderBy: { nombre: "asc" } });
+  // Solo empresas con carpeta en "trabajos empresas" — las que de verdad se usan
+  // para pedidos reales, no fichas sueltas sin carpeta asignada.
+  const empresas = await prisma.empresa.findMany({
+    where: { carpeta: { not: null } },
+    orderBy: { nombre: "asc" },
+  });
 
   return (
     <Page>
