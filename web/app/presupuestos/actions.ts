@@ -30,6 +30,7 @@ export async function crearPresupuesto(input: {
   empresaId: string;
   fecha: string; // yyyy-mm-dd
   conIva: boolean;
+  adelantoPct: number | null;
   lineas: LineaPresupuestoInput[];
 }): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const lineas = input.lineas.filter((l) => l.concepto.trim() !== "");
@@ -47,6 +48,7 @@ export async function crearPresupuesto(input: {
       fecha: new Date(input.fecha),
       estado: "BORRADOR",
       conIva: input.conIva,
+      adelantoPct: input.adelantoPct,
       lineas: {
         create: lineas.map((l) => ({
           concepto: l.concepto,

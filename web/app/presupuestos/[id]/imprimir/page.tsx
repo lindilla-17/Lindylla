@@ -15,6 +15,7 @@ export default async function ImprimirPresupuestoPage({ params }: { params: Prom
   const neto = p.lineas.reduce((s, l) => s + l.cantidad * l.precioUnitario, 0);
   const iva = p.conIva ? neto * 0.21 : 0;
   const total = neto + iva;
+  const importeAdelanto = p.adelantoPct ? (total * p.adelantoPct) / 100 : 0;
 
   return (
     <div className="max-w-[820px] mx-auto px-8 py-6">
@@ -95,6 +96,14 @@ export default async function ImprimirPresupuestoPage({ params }: { params: Prom
             </div>
           </div>
         </div>
+
+        {/* Banda de adelanto solicitado, como en las facturas de adelanto/resto */}
+        {p.adelantoPct && (
+          <div className="mt-6 flex items-center justify-between bg-[#4e8f84] text-white rounded px-5 py-2.5">
+            <span className="font-semibold text-[14px]">Adelanto solicitado ({p.adelantoPct}%)</span>
+            <span className="font-bold text-[16px]">{euro(importeAdelanto)}</span>
+          </div>
+        )}
 
         {/* Pie: pago e información */}
         <div className="grid grid-cols-2 gap-8 mt-12 pt-6 border-t border-[#d9d2c7] text-[12px] leading-relaxed">

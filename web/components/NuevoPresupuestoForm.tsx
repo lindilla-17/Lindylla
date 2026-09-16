@@ -23,6 +23,8 @@ export function NuevoPresupuestoForm({ empresas }: { empresas: EmpresaOpt[] }) {
   const [fecha, setFecha] = useState(hoy);
   const [empresaId, setEmpresaId] = useState("");
   const [conIva, setConIva] = useState(true);
+  const [conAdelanto, setConAdelanto] = useState(false);
+  const [adelantoPct, setAdelantoPct] = useState(30);
   const [lineas, setLineas] = useState<LineaPresupuestoInput[]>([
     { concepto: "Gorros quirófano personalizados", cantidad: 1, precioUnitario: 0 },
   ]);
@@ -41,11 +43,18 @@ export function NuevoPresupuestoForm({ empresas }: { empresas: EmpresaOpt[] }) {
   const neto = lineas.reduce((s, l) => s + (l.cantidad || 0) * (l.precioUnitario || 0), 0);
   const iva = conIva ? neto * 0.21 : 0;
   const total = neto + iva;
+  const importeAdelanto = conAdelanto ? (total * adelantoPct) / 100 : 0;
 
   const guardar = () => {
     setError(null);
     startTransition(async () => {
-      const r = await crearPresupuesto({ empresaId, fecha, conIva, lineas });
+      const r = await crearPresupuesto({
+        empresaId,
+        fecha,
+        conIva,
+        adelantoPct: conAdelanto ? adelantoPct : null,
+        lineas,
+      });
       if (r.ok) router.push(`/presupuestos/${r.id}/imprimir`);
       else setError(r.error);
     });
@@ -135,10 +144,37 @@ export function NuevoPresupuestoForm({ empresas }: { empresas: EmpresaOpt[] }) {
         </div>
 
         <div className="card p-5">
+          <h2 className="font-semibold text-[15px] mb-4">Adelanto</h2>
+          <label className="flex items-center gap-2 text-[13px] mb-3">
+            <input type="checkbox" checked={conAdelanto} onChange={(e) => setConAdelanto(e.target.checked)} />
+            Pedir un adelanto al aceptar el presupuesto
+          </label>
+          {conAdelanto && (
+            <label className="text-[13px] muted flex items-center gap-2">
+              Porcentaje
+              <input
+                type="number"
+                min="1"
+                max="100"
+                className="w-20 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-[14px]"
+                value={adelantoPct}
+                onChange={(e) => setAdelantoPct(Number(e.target.value))}
+              />
+              %
+            </label>
+          )}
+        </div>
+
+        <div className="card p-5">
           <h2 className="font-semibold text-[15px] mb-4">Resumen</h2>
           <div className="flex flex-col gap-2 text-[14px]">
             <div className="flex justify-between"><span className="muted">Total neto</span><span className="font-semibold">{euro(neto)}</span></div>
             <div className="flex justify-between"><span className="muted">IVA {conIva ? "21%" : "(no aplica)"}</span><span className="font-semibold">{euro(iva)}</span></div>
+            {conAdelanto && (
+              <div className="flex justify-between text-[var(--brand-teal-dark)]">
+                <span>Adelanto ({adelantoPct}%)</span><span className="font-semibold">{euro(importeAdelanto)}</span>
+              </div>
+            )}
             <div className="border-t border-[var(--border)] pt-2 mt-1 flex justify-between text-[17px]">
               <span className="font-semibold">TOTAL</span>
               <span className="font-bold text-[var(--brand-teal-dark)]">{euro(total)}</span>

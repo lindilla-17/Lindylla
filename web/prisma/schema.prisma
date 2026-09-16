@@ -56,6 +56,7 @@ model Presupuesto {
   fecha     DateTime @default(now())
   estado    String   @default("BORRADOR") // BORRADOR | ENVIADO | ACEPTADO | RECHAZADO
   conIva    Boolean  @default(true) // false para clientes de fuera de España a los que no siempre se factura con IVA
+  adelantoPct Float? // % de adelanto solicitado (ej. 30); null = no se pide adelanto
   notas     String?
   archivo   String? // nombre del PDF/Excel del presupuesto
   carpeta   String? // carpeta del pedido en "trabajos empresas"
