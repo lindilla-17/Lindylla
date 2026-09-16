@@ -13,6 +13,12 @@ type EmpresaOpt = {
 };
 
 const euro = (n: number) => n.toLocaleString("es-ES", { style: "currency", currency: "EUR" });
+const num = (s: string) => parseFloat(s.replace(",", ".")) || 0;
+
+// El precio se edita como texto para poder escribir el punto/coma decimal
+// sin que se borre a medio escribir (con <input type="number"> controlado
+// desde un número, "6." se convierte en "6" y no deja seguir escribiendo).
+type LineaEdit = { concepto: string; cantidad: number; precioUnitario: string };
 
 export function NuevoPresupuestoForm({ empresas }: { empresas: EmpresaOpt[] }) {
   const router = useRouter();
@@ -25,8 +31,8 @@ export function NuevoPresupuestoForm({ empresas }: { empresas: EmpresaOpt[] }) {
   const [conIva, setConIva] = useState(true);
   const [conAdelanto, setConAdelanto] = useState(false);
   const [adelantoPct, setAdelantoPct] = useState(30);
-  const [lineas, setLineas] = useState<LineaPresupuestoInput[]>([
-    { concepto: "Gorros quirófano personalizados", cantidad: 1, precioUnitario: 0 },
+  const [lineas, setLineas] = useState<LineaEdit[]>([
+    { concepto: "Gorros quirófano personalizados", cantidad: 1, precioUnitario: "" },
   ]);
 
   const elegirEmpresa = (id: string) => {
@@ -37,10 +43,10 @@ export function NuevoPresupuestoForm({ empresas }: { empresas: EmpresaOpt[] }) {
     else setConIva(true);
   };
 
-  const setLinea = (i: number, patch: Partial<LineaPresupuestoInput>) =>
+  const setLinea = (i: number, patch: Partial<LineaEdit>) =>
     setLineas((ls) => ls.map((l, j) => (j === i ? { ...l, ...patch } : l)));
 
-  const neto = lineas.reduce((s, l) => s + (l.cantidad || 0) * (l.precioUnitario || 0), 0);
+  const neto = lineas.reduce((s, l) => s + (l.cantidad || 0) * num(l.precioUnitario), 0);
   const iva = conIva ? neto * 0.21 : 0;
   const total = neto + iva;
   const importeAdelanto = conAdelanto ? (total * adelantoPct) / 100 : 0;
@@ -53,7 +59,11 @@ export function NuevoPresupuestoForm({ empresas }: { empresas: EmpresaOpt[] }) {
         fecha,
         conIva,
         adelantoPct: conAdelanto ? adelantoPct : null,
-        lineas,
+        lineas: lineas.map((l): LineaPresupuestoInput => ({
+          concepto: l.concepto,
+          cantidad: l.cantidad,
+          precioUnitario: num(l.precioUnitario),
+        })),
       });
       if (r.ok) router.push(`/presupuestos/${r.id}/imprimir`);
       else setError(r.error);
@@ -93,7 +103,7 @@ export function NuevoPresupuestoForm({ empresas }: { empresas: EmpresaOpt[] }) {
             <h2 className="font-semibold text-[15px]">Productos / servicios</h2>
             <button
               type="button"
-              onClick={() => setLineas((ls) => [...ls, { concepto: "", cantidad: 1, precioUnitario: 0 }])}
+              onClick={() => setLineas((ls) => [...ls, { concepto: "", cantidad: 1, precioUnitario: "" }])}
               className="text-[13px] font-semibold text-[var(--brand-teal-dark)] hover:underline"
             >
               + Añadir línea
@@ -104,7 +114,7 @@ export function NuevoPresupuestoForm({ empresas }: { empresas: EmpresaOpt[] }) {
               <div key={i} className="grid grid-cols-[1fr_90px_110px_32px] gap-2 items-center">
                 <input className={inputCls} placeholder="Concepto (ej. 300 gorros personalizados)" value={l.concepto} onChange={(e) => setLinea(i, { concepto: e.target.value })} />
                 <input className={inputCls} type="number" min="0" step="1" placeholder="Cant." value={l.cantidad} onChange={(e) => setLinea(i, { cantidad: Number(e.target.value) })} />
-                <input className={inputCls} type="number" min="0" step="0.01" placeholder="€/ud" value={l.precioUnitario} onChange={(e) => setLinea(i, { precioUnitario: Number(e.target.value) })} />
+                <input className={inputCls} placeholder="€/ud" inputMode="decimal" value={l.precioUnitario} onChange={(e) => setLinea(i, { precioUnitario: e.target.value })} />
                 <button
                   type="button"
                   onClick={() => setLineas((ls) => ls.filter((_, j) => j !== i))}
