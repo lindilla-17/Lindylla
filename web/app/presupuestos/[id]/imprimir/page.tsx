@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { PrintBar } from "@/components/PrintBar";
+import { ConvertirEnFacturaBtn } from "@/components/ConvertirEnFacturaBtn";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +11,7 @@ const fechaLarga = (d: Date) => d.toLocaleDateString("es-ES", { day: "2-digit", 
 
 export default async function ImprimirPresupuestoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const p = await prisma.presupuesto.findUnique({ where: { id }, include: { empresa: true, lineas: true } });
+  const p = await prisma.presupuesto.findUnique({ where: { id }, include: { empresa: true, lineas: true, factura: true } });
   if (!p) notFound();
 
   const neto = p.lineas.reduce((s, l) => s + l.cantidad * l.precioUnitario, 0);
@@ -27,6 +29,19 @@ export default async function ImprimirPresupuestoPage({ params }: { params: Prom
           nombreArchivo: `Presupuesto ${p.empresa.nombre} ${p.fecha.toISOString().slice(0, 10)}.pdf`,
         }}
       />
+
+      <div className="no-print flex justify-end mb-4">
+        {p.factura ? (
+          <Link
+            href={`/facturas/${p.factura.id}/imprimir`}
+            className="text-[13px] font-semibold text-[var(--tone-green)] hover:underline"
+          >
+            ✓ Factura {p.factura.numero} generada — ver →
+          </Link>
+        ) : (
+          <ConvertirEnFacturaBtn presupuestoId={p.id} />
+        )}
+      </div>
 
       {/* --- Hoja de presupuesto --- */}
       <div className="factura-hoja bg-white text-[#16211e] rounded-xl border border-[var(--border)] shadow-sm px-12 py-7 print:border-0 print:shadow-none print:rounded-none">

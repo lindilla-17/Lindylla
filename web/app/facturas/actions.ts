@@ -218,3 +218,53 @@ export async function actualizarFactura(
   revalidatePath("/");
   return { ok: true, id };
 }
+
+// Convierte un presupuesto aceptado en una factura real, con su propio
+// número de la serie de facturas (no el número informal del presupuesto).
+// El presupuesto queda marcado como ACEPTADO y enlazado a la factura.
+export async function convertirPresupuestoEnFactura(
+  presupuestoId: string
+): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  const presupuesto = await prisma.presupuesto.findUnique({
+    where: { id: presupuestoId },
+    include: { lineas: true, factura: true },
+  });
+  if (!presupuesto) return { ok: false, error: "No se encuentra el presupuesto." };
+  if (presupuesto.factura) return { ok: false, error: "Este presupuesto ya tiene una factura generada." };
+  if (presupuesto.lineas.length === 0) return { ok: false, error: "El presupuesto no tiene líneas." };
+
+  const numero = await siguienteNumeroFactura();
+  const lineas: LineaFactura[] = presupuesto.lineas.map((l) => ({
+    concepto: l.concepto,
+    cantidad: l.cantidad,
+    precioUnitario: l.precioUnitario,
+  }));
+  const neto = Math.round(lineas.reduce((s, l) => s + l.cantidad * l.precioUnitario, 0) * 100) / 100;
+  const iva = presupuesto.conIva ? Math.round(neto * 0.21 * 100) / 100 : 0;
+
+  const factura = await prisma.factura.create({
+    data: {
+      numero,
+      empresaId: presupuesto.empresaId,
+      presupuestoId: presupuesto.id,
+      fecha: new Date(),
+      estado: "PENDIENTE",
+      neto,
+      iva,
+      total: Math.round((neto + iva) * 100) / 100,
+      concepto: lineas.map((l) => l.concepto).join(" + "),
+      lineasJson: JSON.stringify(lineas),
+      notas: "Generada al aceptar un presupuesto",
+    },
+  });
+
+  await prisma.presupuesto.update({ where: { id: presupuesto.id }, data: { estado: "ACEPTADO" } });
+
+  await guardarFacturaLindillaEnDrive(factura.id);
+
+  revalidatePath("/facturas");
+  revalidatePath("/presupuestos");
+  revalidatePath("/finanzas");
+  revalidatePath("/");
+  return { ok: true, id: factura.id };
+}
