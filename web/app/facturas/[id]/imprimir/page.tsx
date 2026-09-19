@@ -38,7 +38,10 @@ export default async function ImprimirFacturaPage({ params }: { params: Promise<
 
   return (
     <div className="max-w-[820px] mx-auto px-8 py-6">
-      <PrintBar facturaId={f.id} />
+      <PrintBar
+        facturaId={f.id}
+        compartirPdf={{ href: `/facturas/${f.id}/pdf`, nombreArchivo: `Factura ${f.numero}.pdf` }}
+      />
 
       {/* --- Hoja de factura --- */}
       <div className="factura-hoja bg-white text-[#16211e] rounded-xl border border-[var(--border)] shadow-sm px-12 py-10 print:border-0 print:shadow-none print:rounded-none">
