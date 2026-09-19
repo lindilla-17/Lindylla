@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { generarFacturaLindillaPdf, type LineaPdf, type ParcialPdf } from "@/lib/facturaLindillaPdf";
 import { subirFacturaLindillaADrive } from "@/lib/googleDrive";
 
+const euroFmt = (n: number) => n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+
 // Alterna el estado de cobro de una factura (Pagada <-> Pendiente).
 export async function toggleFacturaPagada(id: string) {
   const factura = await prisma.factura.findUnique({ where: { id } });
@@ -241,6 +243,25 @@ export async function convertirPresupuestoEnFactura(
   }));
   const neto = Math.round(lineas.reduce((s, l) => s + l.cantidad * l.precioUnitario, 0) * 100) / 100;
   const iva = presupuesto.conIva ? Math.round(neto * 0.21 * 100) / 100 : 0;
+  const total = Math.round((neto + iva) * 100) / 100;
+
+  // Si el presupuesto pedía un adelanto, la factura es por el pedido
+  // completo (a efectos de IVA/contabilidad) pero se destaca lo que queda
+  // por cobrar de verdad: el total menos lo que ya se adelantó.
+  let lineasJson: string;
+  let notas: string;
+  if (presupuesto.adelantoPct) {
+    const importeAdelanto = Math.round((total * presupuesto.adelantoPct) / 100 * 100) / 100;
+    const resto = Math.round((total - importeAdelanto) * 100) / 100;
+    lineasJson = JSON.stringify({
+      lineas,
+      parcial: { etiqueta: `Resto a pagar (ya adelantó ${euroFmt(importeAdelanto)} · ${presupuesto.adelantoPct}%)`, importe: resto },
+    });
+    notas = `Generada al aceptar un presupuesto. Adelanto del ${presupuesto.adelantoPct}% (${euroFmt(importeAdelanto)}) ya cobrado; queda por cobrar ${euroFmt(resto)}.`;
+  } else {
+    lineasJson = JSON.stringify(lineas);
+    notas = "Generada al aceptar un presupuesto";
+  }
 
   const factura = await prisma.factura.create({
     data: {
@@ -251,10 +272,10 @@ export async function convertirPresupuestoEnFactura(
       estado: "PENDIENTE",
       neto,
       iva,
-      total: Math.round((neto + iva) * 100) / 100,
+      total,
       concepto: lineas.map((l) => l.concepto).join(" + "),
-      lineasJson: JSON.stringify(lineas),
-      notas: "Generada al aceptar un presupuesto",
+      lineasJson,
+      notas,
     },
   });
 
