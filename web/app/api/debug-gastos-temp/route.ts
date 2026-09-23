@@ -4,16 +4,16 @@ import { NextResponse } from "next/server";
 export async function GET() {
   const g = await prisma.gasto.create({
     data: {
-      concepto: "Producción gorros: impresión, tela, corte y confección (fra. 26F02681, pedidos 26E06589/26E06590/26E07243)",
+      concepto: "Producción gorros sin confección: impresión, tela y corte (fra. 26F03433, pedido 26E09288)",
       categoria: "MATERIAL",
       tipo: "SOCIEDAD",
       proveedor: "DTF a Profesionales (IMP Sport Wear S.L.)",
-      fecha: new Date("2026-07-23"),
-      neto: 377.78,
-      iva: 79.33,
-      importe: 457.11,
+      fecha: new Date("2026-09-22"),
+      neto: 147.35,
+      iva: 30.94,
+      importe: 178.29,
       estado: "PAGADO",
-      archivo: "FACTURA 26F02681 LINDILLA SL.pdf",
+      archivo: "FACTURA 26F03433 LINDILLA SL.pdf",
     },
   });
   return NextResponse.json(g);
