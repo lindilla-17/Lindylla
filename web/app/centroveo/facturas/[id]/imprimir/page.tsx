@@ -43,6 +43,10 @@ export default async function ImprimirCentroveoPage({ params }: { params: Promis
       <CentroveoPrintBar
         volverA={volverA}
         enlaceExtra={tieneDesglose ? { href: `/centroveo/facturas/${f.id}/desglose`, label: "Ver desglose por conceptos" } : undefined}
+        compartirPdf={{
+          href: `/centroveo/facturas/${f.id}/pdf`,
+          nombreArchivo: `Factura ${f.numero.replace(/\//g, "-")}.pdf`,
+        }}
       />
 
       {/* --- Hoja de factura --- */}
