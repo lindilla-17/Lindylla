@@ -30,7 +30,13 @@ export default async function DesgloseCentroveoPage({ params }: { params: Promis
 
   return (
     <div className="max-w-[820px] mx-auto px-4 sm:px-8 py-6">
-      <CentroveoPrintBar volverA={`/centroveo/facturas/${f.id}/imprimir`} />
+      <CentroveoPrintBar
+        volverA={`/centroveo/facturas/${f.id}/imprimir`}
+        compartirPdf={{
+          href: `/centroveo/facturas/${f.id}/desglose/pdf`,
+          nombreArchivo: `Desglose Factura ${f.numero.replace(/\//g, "-")}.pdf`,
+        }}
+      />
 
       <div className="factura-hoja bg-white text-[#16211e] rounded-xl border border-[var(--border)] shadow-sm px-8 sm:px-12 py-10 print:border-0 print:shadow-none print:rounded-none">
         <div className="flex items-start justify-between gap-4">
