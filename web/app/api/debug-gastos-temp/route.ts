@@ -4,12 +4,12 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   const formData = new FormData();
-  formData.set("proveedor", "Prueba IVA mixto");
-  formData.set("concepto", "Prueba renglones IVA");
+  formData.set("proveedor", "Prueba devolución");
+  formData.set("concepto", "Prueba gasto negativo");
   formData.set("categoria", "GENERAL");
   formData.set("tipo", "SOCIEDAD");
   formData.set("fecha", "2026-10-04");
-  formData.set("lineas", JSON.stringify([{ base: 16.53, pctIva: 21 }, { base: 3.63, pctIva: 10 }]));
+  formData.set("lineas", JSON.stringify([{ base: -50, pctIva: 21 }]));
 
   const r = await crearGasto(formData);
   if (!r.ok) return NextResponse.json(r);
