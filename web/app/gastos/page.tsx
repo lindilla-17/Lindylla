@@ -8,6 +8,18 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
+// Cuando una factura mezcla varios tipos de IVA, lineasJson guarda el
+// desglose — se muestra como texto explicativo al pasar el ratón/dedo.
+function desgloseIva(lineasJson: string | null): string | undefined {
+  if (!lineasJson) return undefined;
+  try {
+    const lineas: { base: number; pctIva: number }[] = JSON.parse(lineasJson);
+    return lineas.map((l) => `${l.base.toFixed(2)}€ al ${l.pctIva}%`).join(" + ");
+  } catch {
+    return undefined;
+  }
+}
+
 // Gastos de Lindilla (gorros): materiales, personal, logística, congresos...
 export default async function GastosPage({
   searchParams,
@@ -102,7 +114,10 @@ export default async function GastosPage({
                     </Badge>
                   </div>
                   <div className="flex items-baseline justify-between pt-1 border-t border-[var(--border-soft)]">
-                    <span className="muted-2 text-[12px]">{euroExacto(g.neto)} + IVA {euroExacto(g.iva)}</span>
+                    <span className="muted-2 text-[12px]">
+                      {euroExacto(g.neto)} + IVA {euroExacto(g.iva)}
+                      {desgloseIva(g.lineasJson) && <span className="block">({desgloseIva(g.lineasJson)})</span>}
+                    </span>
                     <span className="font-bold text-[18px]">{euroExacto(g.importe)}</span>
                   </div>
                   {g.archivo ? (
@@ -159,7 +174,10 @@ export default async function GastosPage({
                       </td>
                       <td className="muted whitespace-nowrap">{fecha(g.fecha)}</td>
                       <td className="text-right whitespace-nowrap">{euroExacto(g.neto)}</td>
-                      <td className="text-right whitespace-nowrap muted">{euroExacto(g.iva)}</td>
+                      <td className="text-right whitespace-nowrap muted" title={desgloseIva(g.lineasJson)}>
+                        {euroExacto(g.iva)}
+                        {g.lineasJson && <span className="ml-1 text-[10px]">ℹ</span>}
+                      </td>
                       <td className="text-right font-semibold whitespace-nowrap">{euroExacto(g.importe)}</td>
                       <td className="text-[12px]">
                         {g.archivo ? (

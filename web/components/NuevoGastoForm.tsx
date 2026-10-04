@@ -14,9 +14,18 @@ const CATEGORIAS = [
   { value: "GENERAL", label: "General" },
 ];
 
+const TIPOS_IVA = [21, 10, 4, 0];
+
+type Linea = { base: string; pctIva: number };
+
+const num = (s: string) => parseFloat(s.replace(",", ".")) || 0;
+const eur = (n: number) => n.toLocaleString("es-ES", { minimumFractionDigits: 2 }) + " €";
+
 // Alta de un gasto de Lindilla (gorros). Permite adjuntar el justificante
 // haciéndole una foto con la cámara del móvil (o eligiendo un archivo desde
 // el ordenador); la foto se guarda sola en la carpeta de Drive que corresponda.
+// Si la factura mezcla varios tipos de IVA (pasa a menudo), se añaden más
+// renglones en vez de tener que registrar la misma factura varias veces.
 export function NuevoGastoForm() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -25,16 +34,18 @@ export function NuevoGastoForm() {
   const [categoria, setCategoria] = useState("GENERAL");
   const [tipo, setTipo] = useState("SOCIEDAD");
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
-  const [neto, setNeto] = useState("");
-  const [iva, setIva] = useState("");
+  const [lineas, setLineas] = useState<Linea[]>([{ base: "", pctIva: 21 }]);
   const [foto, setFoto] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
-  const num = (s: string) => parseFloat(s.replace(",", ".")) || 0;
-  const total = Math.round((num(neto) + num(iva)) * 100) / 100;
-  const eur = (n: number) => n.toLocaleString("es-ES", { minimumFractionDigits: 2 }) + " €";
+  const setLinea = (i: number, patch: Partial<Linea>) =>
+    setLineas((ls) => ls.map((l, j) => (j === i ? { ...l, ...patch } : l)));
+
+  const neto = lineas.reduce((s, l) => s + num(l.base), 0);
+  const iva = lineas.reduce((s, l) => s + Math.round(num(l.base) * (l.pctIva / 100) * 100) / 100, 0);
+  const total = Math.round((neto + iva) * 100) / 100;
 
   async function elegirFoto(file: File | null) {
     if (file && file.type.startsWith("image/")) {
@@ -61,8 +72,10 @@ export function NuevoGastoForm() {
     formData.set("categoria", categoria);
     formData.set("tipo", tipo);
     formData.set("fecha", fecha);
-    formData.set("neto", neto || "0");
-    formData.set("iva", iva || "0");
+    formData.set(
+      "lineas",
+      JSON.stringify(lineas.map((l) => ({ base: num(l.base), pctIva: l.pctIva })))
+    );
     if (foto) formData.set("archivo", foto);
 
     try {
@@ -117,18 +130,64 @@ export function NuevoGastoForm() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 items-end">
-        <div>
-          <label className="muted text-[13px] font-medium block mb-1.5">Base (sin IVA)</label>
-          <input className={inputCls} value={neto} onChange={(e) => setNeto(e.target.value)} placeholder="0,00" inputMode="decimal" />
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="muted text-[13px] font-medium">Base imponible por tipo de IVA</label>
+          {lineas.length < TIPOS_IVA.length && (
+            <button
+              type="button"
+              onClick={() => {
+                const usados = new Set(lineas.map((l) => l.pctIva));
+                const siguiente = TIPOS_IVA.find((p) => !usados.has(p)) ?? 21;
+                setLineas((ls) => [...ls, { base: "", pctIva: siguiente }]);
+              }}
+              className="text-[12px] font-semibold text-[var(--brand-teal-dark)] hover:underline"
+            >
+              + Añadir renglón con otro IVA
+            </button>
+          )}
         </div>
-        <div>
-          <label className="muted text-[13px] font-medium block mb-1.5">IVA (importe)</label>
-          <input className={inputCls} value={iva} onChange={(e) => setIva(e.target.value)} placeholder="0,00" inputMode="decimal" />
+        <p className="muted-2 text-[11px] mb-2">Si la factura mezcla varios tipos de IVA, añade un renglón por cada uno — el IVA se calcula solo.</p>
+        <div className="flex flex-col gap-2">
+          {lineas.map((l, i) => (
+            <div key={i} className="grid grid-cols-[1fr_90px_90px_28px] gap-2 items-center">
+              <input
+                className={inputCls}
+                value={l.base}
+                onChange={(e) => setLinea(i, { base: e.target.value })}
+                placeholder="Base sin IVA"
+                inputMode="decimal"
+              />
+              <select
+                className={inputCls}
+                value={l.pctIva}
+                onChange={(e) => setLinea(i, { pctIva: Number(e.target.value) })}
+              >
+                {TIPOS_IVA.map((p) => (
+                  <option key={p} value={p}>{p}%</option>
+                ))}
+              </select>
+              <div className="text-[13px] muted text-right pr-1">
+                +{eur(Math.round(num(l.base) * (l.pctIva / 100) * 100) / 100)}
+              </div>
+              {lineas.length > 1 ? (
+                <button
+                  type="button"
+                  onClick={() => setLineas((ls) => ls.filter((_, j) => j !== i))}
+                  className="text-[var(--tone-rose)] text-[18px] leading-none hover:opacity-70"
+                  title="Quitar renglón"
+                >
+                  ×
+                </button>
+              ) : (
+                <span />
+              )}
+            </div>
+          ))}
         </div>
-        <div className="text-[14px]">
-          <div className="muted text-[13px]">Total</div>
-          <div className="font-semibold text-[18px] mt-1">{eur(total)}</div>
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--border)] text-[14px]">
+          <span className="muted">Total ({eur(neto)} + {eur(iva)} IVA)</span>
+          <span className="font-semibold text-[18px]">{eur(total)}</span>
         </div>
       </div>
 

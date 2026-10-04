@@ -201,5 +201,6 @@ model Gasto {
   fechaPago        DateTime?
   archivo          String? // justificante en la carpeta de cuentas
   notas            String? // ej. aviso si falló la subida del justificante a Drive
+  lineasJson       String? // desglose por tipo de IVA: [{base, pctIva}], cuando una factura mezcla varios tipos
   createdAt        DateTime @default(now())
 }

@@ -43,6 +43,25 @@ function extensionDe(mimeType: string): string {
   return "jpg";
 }
 
+export type LineaGastoInput = { base: number; pctIva: number };
+
+// Una factura puede mezclar varios tipos de IVA (ej. 21% y 10% en el mismo
+// ticket); cada renglón trae su propia base y porcentaje, y el IVA de cada
+// uno se calcula aquí mismo — no hay que calcularlo a mano ni meter la
+// factura dos veces para separarlos.
+function calcularTotales(lineas: LineaGastoInput[]) {
+  let neto = 0;
+  let iva = 0;
+  for (const l of lineas) {
+    neto += l.base;
+    iva += Math.round(l.base * (l.pctIva / 100) * 100) / 100;
+  }
+  neto = Math.round(neto * 100) / 100;
+  iva = Math.round(iva * 100) / 100;
+  const importe = Math.round((neto + iva) * 100) / 100;
+  return { neto, iva, importe };
+}
+
 // Crea un gasto de Lindilla (gorros) desde el formulario. Si se adjunta una
 // foto/archivo del justificante, se sube sola a la carpeta de Drive que
 // corresponda (Gastos sociedad / Gastos mios) según el año y trimestre de la
@@ -54,15 +73,22 @@ export async function crearGasto(formData: FormData): Promise<{ ok: true; id: st
   const categoria = String(formData.get("categoria") ?? "GENERAL");
   const tipo = String(formData.get("tipo") ?? "SOCIEDAD");
   const fechaStr = String(formData.get("fecha") ?? "");
-  const neto = parseFloat(String(formData.get("neto") ?? "0").replace(",", ".")) || 0;
-  const iva = parseFloat(String(formData.get("iva") ?? "0").replace(",", ".")) || 0;
   const archivoFile = formData.get("archivo");
+
+  let lineas: LineaGastoInput[];
+  try {
+    lineas = JSON.parse(String(formData.get("lineas") ?? "[]"));
+  } catch {
+    lineas = [];
+  }
+  lineas = lineas.filter((l) => l.base > 0);
 
   if (!concepto) return { ok: false, error: "Falta el concepto del gasto." };
   if (!fechaStr) return { ok: false, error: "Falta la fecha." };
+  if (lineas.length === 0) return { ok: false, error: "Añade al menos una base imponible." };
 
   const fecha = new Date(fechaStr);
-  const importe = Math.round((neto + iva) * 100) / 100;
+  const { neto, iva, importe } = calcularTotales(lineas);
 
   const gasto = await prisma.gasto.create({
     data: {
@@ -75,6 +101,7 @@ export async function crearGasto(formData: FormData): Promise<{ ok: true; id: st
       iva,
       importe,
       estado: "PENDIENTE",
+      lineasJson: lineas.length > 1 ? JSON.stringify(lineas) : null,
     },
   });
 
