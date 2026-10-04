@@ -16,10 +16,13 @@ const CATEGORIAS = [
 
 const TIPOS_IVA = [21, 10, 4, 0];
 
-type Linea = { base: string; pctIva: number };
+type Linea = { base: string; pctIva: number; devolucion: boolean };
 
 const num = (s: string) => parseFloat(s.replace(",", ".")) || 0;
 const eur = (n: number) => n.toLocaleString("es-ES", { minimumFractionDigits: 2 }) + " €";
+// En el teclado numérico del móvil normalmente no hay signo "menos", así que
+// una devolución se marca con una casilla en vez de escribir un negativo.
+const baseEfectiva = (l: Linea) => (l.devolucion ? -Math.abs(num(l.base)) : num(l.base));
 
 // Alta de un gasto de Lindilla (gorros). Permite adjuntar el justificante
 // haciéndole una foto con la cámara del móvil (o eligiendo un archivo desde
@@ -34,7 +37,7 @@ export function NuevoGastoForm() {
   const [categoria, setCategoria] = useState("GENERAL");
   const [tipo, setTipo] = useState("SOCIEDAD");
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
-  const [lineas, setLineas] = useState<Linea[]>([{ base: "", pctIva: 21 }]);
+  const [lineas, setLineas] = useState<Linea[]>([{ base: "", pctIva: 21, devolucion: false }]);
   const [foto, setFoto] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -43,8 +46,8 @@ export function NuevoGastoForm() {
   const setLinea = (i: number, patch: Partial<Linea>) =>
     setLineas((ls) => ls.map((l, j) => (j === i ? { ...l, ...patch } : l)));
 
-  const neto = lineas.reduce((s, l) => s + num(l.base), 0);
-  const iva = lineas.reduce((s, l) => s + Math.round(num(l.base) * (l.pctIva / 100) * 100) / 100, 0);
+  const neto = lineas.reduce((s, l) => s + baseEfectiva(l), 0);
+  const iva = lineas.reduce((s, l) => s + Math.round(baseEfectiva(l) * (l.pctIva / 100) * 100) / 100, 0);
   const total = Math.round((neto + iva) * 100) / 100;
 
   async function elegirFoto(file: File | null) {
@@ -74,7 +77,7 @@ export function NuevoGastoForm() {
     formData.set("fecha", fecha);
     formData.set(
       "lineas",
-      JSON.stringify(lineas.map((l) => ({ base: num(l.base), pctIva: l.pctIva })))
+      JSON.stringify(lineas.map((l) => ({ base: baseEfectiva(l), pctIva: l.pctIva })))
     );
     if (foto) formData.set("archivo", foto);
 
@@ -139,7 +142,7 @@ export function NuevoGastoForm() {
               onClick={() => {
                 const usados = new Set(lineas.map((l) => l.pctIva));
                 const siguiente = TIPOS_IVA.find((p) => !usados.has(p)) ?? 21;
-                setLineas((ls) => [...ls, { base: "", pctIva: siguiente }]);
+                setLineas((ls) => [...ls, { base: "", pctIva: siguiente, devolucion: false }]);
               }}
               className="text-[12px] font-semibold text-[var(--brand-teal-dark)] hover:underline"
             >
@@ -150,38 +153,44 @@ export function NuevoGastoForm() {
         <p className="muted-2 text-[11px] mb-2">Si la factura mezcla varios tipos de IVA, añade un renglón por cada uno — el IVA se calcula solo.</p>
         <div className="flex flex-col gap-2">
           {lineas.map((l, i) => (
-            <div key={i} className="grid grid-cols-[1fr_90px_90px_28px] gap-2 items-center">
-              <input
-                className={inputCls}
-                value={l.base}
-                onChange={(e) => setLinea(i, { base: e.target.value })}
-                placeholder="Base sin IVA"
-                inputMode="decimal"
-              />
-              <select
-                className={inputCls}
-                value={l.pctIva}
-                onChange={(e) => setLinea(i, { pctIva: Number(e.target.value) })}
-              >
-                {TIPOS_IVA.map((p) => (
-                  <option key={p} value={p}>{p}%</option>
-                ))}
-              </select>
-              <div className="text-[13px] muted text-right pr-1">
-                +{eur(Math.round(num(l.base) * (l.pctIva / 100) * 100) / 100)}
-              </div>
-              {lineas.length > 1 ? (
-                <button
-                  type="button"
-                  onClick={() => setLineas((ls) => ls.filter((_, j) => j !== i))}
-                  className="text-[var(--tone-rose)] text-[18px] leading-none hover:opacity-70"
-                  title="Quitar renglón"
+            <div key={i} className="flex flex-col gap-1.5 pb-2 border-b border-[var(--border-soft)] last:border-0 last:pb-0">
+              <div className="grid grid-cols-[1fr_90px_90px_28px] gap-2 items-center">
+                <input
+                  className={inputCls}
+                  value={l.base}
+                  onChange={(e) => setLinea(i, { base: e.target.value })}
+                  placeholder="Base sin IVA"
+                  inputMode="decimal"
+                />
+                <select
+                  className={inputCls}
+                  value={l.pctIva}
+                  onChange={(e) => setLinea(i, { pctIva: Number(e.target.value) })}
                 >
-                  ×
-                </button>
-              ) : (
-                <span />
-              )}
+                  {TIPOS_IVA.map((p) => (
+                    <option key={p} value={p}>{p}%</option>
+                  ))}
+                </select>
+                <div className={`text-[13px] text-right pr-1 ${l.devolucion ? "text-[var(--tone-rose)]" : "muted"}`}>
+                  {l.devolucion ? "−" : "+"}{eur(Math.abs(Math.round(baseEfectiva(l) * (l.pctIva / 100) * 100) / 100))}
+                </div>
+                {lineas.length > 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => setLineas((ls) => ls.filter((_, j) => j !== i))}
+                    className="text-[var(--tone-rose)] text-[18px] leading-none hover:opacity-70"
+                    title="Quitar renglón"
+                  >
+                    ×
+                  </button>
+                ) : (
+                  <span />
+                )}
+              </div>
+              <label className="flex items-center gap-1.5 text-[12px] muted-2">
+                <input type="checkbox" checked={l.devolucion} onChange={(e) => setLinea(i, { devolucion: e.target.checked })} />
+                Es una devolución o abono (resta en vez de sumar)
+              </label>
             </div>
           ))}
         </div>

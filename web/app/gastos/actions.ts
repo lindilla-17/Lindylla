@@ -81,7 +81,9 @@ export async function crearGasto(formData: FormData): Promise<{ ok: true; id: st
   } catch {
     lineas = [];
   }
-  lineas = lineas.filter((l) => l.base > 0);
+  // Se permite base negativa: una devolución/abono de un proveedor resta del
+  // gasto en vez de tener que borrar o corregir a mano el gasto original.
+  lineas = lineas.filter((l) => l.base !== 0);
 
   if (!concepto) return { ok: false, error: "Falta el concepto del gasto." };
   if (!fechaStr) return { ok: false, error: "Falta la fecha." };
