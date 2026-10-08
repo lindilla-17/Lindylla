@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { crearPresupuesto, type LineaPresupuestoInput } from "@/app/presupuestos/actions";
+import { SelectorEmpresa } from "@/components/SelectorEmpresa";
 
 type EmpresaOpt = {
   id: string;
@@ -35,9 +36,8 @@ export function NuevoPresupuestoForm({ empresas }: { empresas: EmpresaOpt[] }) {
     { concepto: "Gorros quirófano personalizados", cantidad: 1, precioUnitario: "" },
   ]);
 
-  const elegirEmpresa = (id: string) => {
+  const elegirEmpresa = (id: string, e: EmpresaOpt | undefined) => {
     setEmpresaId(id);
-    const e = empresas.find((x) => x.id === id);
     // España con IVA; resto de Europa sin IVA (regla habitual de Lindilla)
     if (e?.pais && e.pais !== "España") setConIva(false);
     else setConIva(true);
@@ -89,12 +89,9 @@ export function NuevoPresupuestoForm({ empresas }: { empresas: EmpresaOpt[] }) {
           <h2 className="font-semibold text-[15px] mb-4">Cliente</h2>
           <label className="text-[13px] muted">
             Empresa
-            <select className={inputCls + " mt-1"} value={empresaId} onChange={(e) => elegirEmpresa(e.target.value)}>
-              <option value="">— Elige una empresa —</option>
-              {empresas.map((e) => (
-                <option key={e.id} value={e.id}>{e.nombre}{e.pais ? ` (${e.pais})` : ""}</option>
-              ))}
-            </select>
+            <div className="mt-1">
+              <SelectorEmpresa empresas={empresas} value={empresaId} onChange={elegirEmpresa} inputCls={inputCls} />
+            </div>
           </label>
         </div>
 

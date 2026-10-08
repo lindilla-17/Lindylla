@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { crearFactura, actualizarFactura, type LineaFactura } from "@/app/facturas/actions";
+import { SelectorEmpresa } from "@/components/SelectorEmpresa";
 
 type EmpresaOpt = {
   id: string;
@@ -57,9 +58,8 @@ export function NuevaFacturaForm({
     ]
   );
 
-  const elegirEmpresa = (id: string) => {
+  const elegirEmpresa = (id: string, e: EmpresaOpt | undefined) => {
     setEmpresaId(id);
-    const e = empresas.find((x) => x.id === id);
     setCif(e?.cif ?? "");
     setDireccion(e?.direccion ?? "");
     // España con IVA; resto de Europa sin IVA (regla habitual de Lindilla)
@@ -115,12 +115,9 @@ export function NuevaFacturaForm({
           <div className="flex flex-col gap-4">
             <label className="text-[13px] muted">
               Empresa
-              <select className={inputCls + " mt-1"} value={empresaId} onChange={(e) => elegirEmpresa(e.target.value)}>
-                <option value="">— Elige una empresa —</option>
-                {empresas.map((e) => (
-                  <option key={e.id} value={e.id}>{e.nombre}{e.pais ? ` (${e.pais})` : ""}</option>
-                ))}
-              </select>
+              <div className="mt-1">
+                <SelectorEmpresa empresas={empresas} value={empresaId} onChange={elegirEmpresa} inputCls={inputCls} />
+              </div>
             </label>
             <div className="grid grid-cols-2 gap-4">
               <label className="text-[13px] muted">
