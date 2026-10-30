@@ -59,7 +59,6 @@ export function SubirFotoGastoForm({ gastoId, resumen }: { gastoId: string; resu
           ref={fileInputRef}
           type="file"
           accept="image/*,application/pdf"
-          capture="environment"
           className="hidden"
           onChange={(e) => elegirFoto(e.target.files?.[0] ?? null)}
         />
