@@ -28,6 +28,7 @@ export function NuevoPresupuestoForm({ empresas }: { empresas: EmpresaOpt[] }) {
 
   const hoy = new Date().toISOString().slice(0, 10);
   const [fecha, setFecha] = useState(hoy);
+  const [codigoPedido, setCodigoPedido] = useState("");
   const [empresaId, setEmpresaId] = useState("");
   const [conIva, setConIva] = useState(true);
   const [conAdelanto, setConAdelanto] = useState(false);
@@ -59,6 +60,7 @@ export function NuevoPresupuestoForm({ empresas }: { empresas: EmpresaOpt[] }) {
         fecha,
         conIva,
         adelantoPct: conAdelanto ? adelantoPct : null,
+        codigoPedido,
         lineas: lineas.map((l): LineaPresupuestoInput => ({
           concepto: l.concepto,
           cantidad: l.cantidad,
@@ -79,10 +81,16 @@ export function NuevoPresupuestoForm({ empresas }: { empresas: EmpresaOpt[] }) {
       <div className="lg:col-span-2 flex flex-col gap-5">
         <div className="card p-5">
           <h2 className="font-semibold text-[15px] mb-4">Datos del presupuesto</h2>
-          <label className="text-[13px] muted">
-            Fecha
-            <input type="date" className={inputCls + " mt-1"} value={fecha} onChange={(e) => setFecha(e.target.value)} />
-          </label>
+          <div className="grid grid-cols-2 gap-4">
+            <label className="text-[13px] muted">
+              Fecha
+              <input type="date" className={inputCls + " mt-1"} value={fecha} onChange={(e) => setFecha(e.target.value)} />
+            </label>
+            <label className="text-[13px] muted">
+              Código de pedido (si ya lo tienes)
+              <input className={inputCls + " mt-1"} value={codigoPedido} onChange={(e) => setCodigoPedido(e.target.value)} placeholder="Opcional" />
+            </label>
+          </div>
         </div>
 
         <div className="card p-5">

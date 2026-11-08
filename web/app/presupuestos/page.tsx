@@ -83,6 +83,7 @@ export default async function PresupuestosPage({
                       <td className="font-medium whitespace-nowrap">{p.empresa.nombre}</td>
                       <td className="muted text-[13px] max-w-[280px]">
                         {p.lineas[0]?.concepto ?? "—"}
+                        {p.codigoPedido && <div className="muted-2 text-[11px] mt-0.5">Nº pedido: {p.codigoPedido}</div>}
                         {p.notas && <div className="muted-2 text-[11px] mt-0.5">{p.notas}</div>}
                       </td>
                       <td><Badge variant={tip.variant}>{tip.label}</Badge></td>

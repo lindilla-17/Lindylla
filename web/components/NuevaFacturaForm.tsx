@@ -29,6 +29,7 @@ export type FacturaInicial = {
   empresaId: string;
   conIva: boolean;
   lineas: LineaFactura[];
+  codigoPedido?: string | null;
 };
 
 export function NuevaFacturaForm({
@@ -48,6 +49,7 @@ export function NuevaFacturaForm({
   const empresaInicial = inicial ? empresas.find((e) => e.id === inicial.empresaId) : undefined;
   const [numero, setNumero] = useState(inicial?.numero ?? siguienteNumero);
   const [fecha, setFecha] = useState(inicial?.fecha ?? hoy);
+  const [codigoPedido, setCodigoPedido] = useState(inicial?.codigoPedido ?? "");
   const [empresaId, setEmpresaId] = useState(inicial?.empresaId ?? "");
   const [cif, setCif] = useState(empresaInicial?.cif ?? "");
   const [direccion, setDireccion] = useState(empresaInicial?.direccion ?? "");
@@ -82,7 +84,7 @@ export function NuevaFacturaForm({
         cantidad: l.cantidad,
         precioUnitario: num(l.precioUnitario),
       }));
-      const datos = { numero, empresaId, fecha, conIva, lineas: lineasFinales, cif, direccion };
+      const datos = { numero, empresaId, fecha, conIva, lineas: lineasFinales, codigoPedido, cif, direccion };
       const r = inicial ? await actualizarFactura(inicial.id, datos) : await crearFactura(datos);
       if (r.ok) router.push(`/facturas/${r.id}/imprimir`);
       else setError(r.error);
@@ -108,6 +110,10 @@ export function NuevaFacturaForm({
               <input type="date" className={inputCls + " mt-1"} value={fecha} onChange={(e) => setFecha(e.target.value)} />
             </label>
           </div>
+          <label className="text-[13px] muted block mt-4">
+            Código de pedido (si lo tienes)
+            <input className={inputCls + " mt-1"} value={codigoPedido} onChange={(e) => setCodigoPedido(e.target.value)} placeholder="Opcional" />
+          </label>
         </div>
 
         <div className="card p-5">

@@ -38,6 +38,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     iva: f.iva,
     total: f.total,
     parcial,
+    codigoPedido: f.codigoPedido,
   });
 
   return new NextResponse(new Uint8Array(pdf), {

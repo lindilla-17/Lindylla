@@ -57,6 +57,7 @@ model Presupuesto {
   estado    String   @default("BORRADOR") // BORRADOR | ENVIADO | ACEPTADO | RECHAZADO
   conIva    Boolean  @default(true) // false para clientes de fuera de España a los que no siempre se factura con IVA
   adelantoPct Float? // % de adelanto solicitado (ej. 30); null = no se pide adelanto
+  codigoPedido String? // código/nº de pedido que da el cliente (a veces lo dan al pedir el presupuesto)
   notas     String?
   archivo   String? // nombre del PDF/Excel del presupuesto
   carpeta   String? // carpeta del pedido en "trabajos empresas"
@@ -95,6 +96,7 @@ model Factura {
   concepto         String?
   lineasJson       String? // líneas de la factura en JSON (para las creadas desde la web)
   archivo          String? // nombre del PDF de la factura (para localizarlo en las carpetas)
+  codigoPedido     String? // código/nº de pedido que da el cliente (a veces lo dan solo al facturar)
   notas            String?
   createdAt        DateTime @default(now())
 }

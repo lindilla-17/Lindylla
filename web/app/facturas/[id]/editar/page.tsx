@@ -37,6 +37,7 @@ export default async function EditarFacturaPage({ params }: { params: Promise<{ 
           empresaId: f.empresaId,
           conIva: f.iva !== 0,
           lineas,
+          codigoPedido: f.codigoPedido,
         }}
       />
     </Page>

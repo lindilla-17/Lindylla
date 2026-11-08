@@ -23,6 +23,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     iva,
     total,
     adelantoPct: p.adelantoPct,
+    codigoPedido: p.codigoPedido,
   });
 
   return new NextResponse(new Uint8Array(pdf), {

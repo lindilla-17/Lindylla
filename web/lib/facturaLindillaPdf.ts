@@ -21,6 +21,7 @@ export type FacturaLindillaPdfDatos = {
   iva: number;
   total: number; // si hay parcial, es lineas + iva (no el importe parcial)
   parcial?: ParcialPdf;
+  codigoPedido?: string | null;
 };
 
 const euro = (n: number) => n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
@@ -46,6 +47,10 @@ export function generarFacturaLindillaPdf(f: FacturaLindillaPdfDatos): Promise<B
     doc.fillColor("#16211e").fontSize(24).text(`Factura ${f.numero}`, 50, 55);
     doc.moveTo(50, 92).lineTo(430, 92).lineWidth(3).strokeColor("#16211e").stroke();
     doc.fontSize(11).text(fechaLarga(f.fecha), 50, 100);
+    if (f.codigoPedido) {
+      doc.fontSize(9).fillColor("#5b6b66").text(`Nº de pedido: ${f.codigoPedido}`, 50, 116);
+      doc.fillColor("#16211e");
+    }
 
     // Cliente / Emisor — las líneas se apilan según lo que ocupe cada una
     // (una dirección larga puede partirse en varias líneas), en vez de

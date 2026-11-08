@@ -83,6 +83,7 @@ async function guardarFacturaLindillaEnDrive(facturaId: string) {
       iva: f.iva,
       total: f.total,
       parcial,
+      codigoPedido: f.codigoPedido,
     });
 
     const resultado = await subirFacturaLindillaADrive({ pdf, nombreArchivo, fecha: f.fecha });
@@ -108,6 +109,7 @@ export async function crearFactura(input: {
   fecha: string; // yyyy-mm-dd
   conIva: boolean;
   lineas: LineaFactura[];
+  codigoPedido?: string;
   // datos del cliente que se actualizan en su ficha si estaban vacíos
   cif?: string;
   direccion?: string;
@@ -143,6 +145,7 @@ export async function crearFactura(input: {
       total: Math.round((neto + iva) * 100) / 100,
       concepto: lineas.map((l) => l.concepto).join(" + "),
       lineasJson: JSON.stringify(lineas),
+      codigoPedido: input.codigoPedido?.trim() || null,
       notas: "Creada desde la web",
     },
   });
@@ -153,6 +156,14 @@ export async function crearFactura(input: {
   revalidatePath("/finanzas");
   revalidatePath("/");
   return { ok: true, id: factura.id };
+}
+
+// Pone o corrige el código/nº de pedido del cliente en una factura ya creada,
+// sin tocar nada más — a veces el cliente lo da solo al facturar.
+export async function actualizarCodigoPedidoFactura(id: string, codigo: string) {
+  await prisma.factura.update({ where: { id }, data: { codigoPedido: codigo.trim() || null } });
+  revalidatePath("/facturas");
+  revalidatePath(`/facturas/${id}/imprimir`);
 }
 
 // Elimina una factura definitivamente (pensado para pruebas o errores recién creados;
@@ -174,6 +185,7 @@ export async function actualizarFactura(
     fecha: string;
     conIva: boolean;
     lineas: LineaFactura[];
+    codigoPedido?: string;
     cif?: string;
     direccion?: string;
   }
@@ -210,6 +222,7 @@ export async function actualizarFactura(
       total: Math.round((neto + iva) * 100) / 100,
       concepto: lineas.map((l) => l.concepto).join(" + "),
       lineasJson: JSON.stringify(lineas),
+      codigoPedido: input.codigoPedido?.trim() || null,
     },
   });
 
@@ -275,6 +288,7 @@ export async function convertirPresupuestoEnFactura(
       total,
       concepto: lineas.map((l) => l.concepto).join(" + "),
       lineasJson,
+      codigoPedido: presupuesto.codigoPedido,
       notas,
     },
   });

@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { PrintBar } from "@/components/PrintBar";
+import { CodigoPedidoEditable } from "@/components/CodigoPedidoEditable";
+import { actualizarCodigoPedidoFactura } from "../../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +45,10 @@ export default async function ImprimirFacturaPage({ params }: { params: Promise<
         compartirPdf={{ href: `/facturas/${f.id}/pdf`, nombreArchivo: `Factura ${f.numero}.pdf` }}
       />
 
+      <div className="no-print flex justify-end mb-4">
+        <CodigoPedidoEditable id={f.id} valorInicial={f.codigoPedido} accion={actualizarCodigoPedidoFactura} />
+      </div>
+
       {/* --- Hoja de factura --- */}
       <div className="factura-hoja bg-white text-[#16211e] rounded-xl border border-[var(--border)] shadow-sm px-12 py-10 print:border-0 print:shadow-none print:rounded-none">
         {/* Cabecera */}
@@ -51,6 +57,7 @@ export default async function ImprimirFacturaPage({ params }: { params: Promise<
             <h1 className="text-[30px] font-serif tracking-tight">Factura {f.numero}</h1>
             <div className="border-t-4 border-[#16211e] w-[420px] mt-1 mb-2" />
             <div className="text-[13px]">{fechaLarga(f.fecha)}</div>
+            {f.codigoPedido && <div className="text-[12px] text-[#5b6b66] mt-0.5">Nº de pedido: {f.codigoPedido}</div>}
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.jpg" alt="Lindilla" className="h-20 w-auto" />

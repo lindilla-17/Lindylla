@@ -148,6 +148,7 @@ export default async function FacturasPage({
                     <td className="font-medium whitespace-nowrap">{f.empresa.nombre}</td>
                     <td className="muted text-[13px] max-w-[300px]">
                       {f.concepto ?? "—"}
+                      {f.codigoPedido && <div className="muted-2 text-[11px] mt-0.5">Nº pedido: {f.codigoPedido}</div>}
                       {f.notas && <div className="muted-2 text-[11px] mt-0.5">⚠ {f.notas}</div>}
                     </td>
                     <td className="muted whitespace-nowrap">{fecha(f.fecha)}</td>

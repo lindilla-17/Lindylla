@@ -31,6 +31,7 @@ export async function crearPresupuesto(input: {
   fecha: string; // yyyy-mm-dd
   conIva: boolean;
   adelantoPct: number | null;
+  codigoPedido?: string;
   lineas: LineaPresupuestoInput[];
 }): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const lineas = input.lineas.filter((l) => l.concepto.trim() !== "");
@@ -49,6 +50,7 @@ export async function crearPresupuesto(input: {
       estado: "BORRADOR",
       conIva: input.conIva,
       adelantoPct: input.adelantoPct,
+      codigoPedido: input.codigoPedido?.trim() || null,
       lineas: {
         create: lineas.map((l) => ({
           concepto: l.concepto,
@@ -67,4 +69,12 @@ export async function crearPresupuesto(input: {
 export async function eliminarPresupuesto(id: string) {
   await prisma.presupuesto.delete({ where: { id } });
   revalidatePath("/presupuestos");
+}
+
+// Pone o corrige el código/nº de pedido del cliente, sin tocar nada más del
+// presupuesto — a veces lo dan al pedir el presupuesto, a veces más tarde.
+export async function actualizarCodigoPedidoPresupuesto(id: string, codigo: string) {
+  await prisma.presupuesto.update({ where: { id }, data: { codigoPedido: codigo.trim() || null } });
+  revalidatePath("/presupuestos");
+  revalidatePath(`/presupuestos/${id}/imprimir`);
 }

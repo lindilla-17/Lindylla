@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { PrintBar } from "@/components/PrintBar";
 import { ConvertirEnFacturaBtn } from "@/components/ConvertirEnFacturaBtn";
+import { CodigoPedidoEditable } from "@/components/CodigoPedidoEditable";
+import { actualizarCodigoPedidoPresupuesto } from "../../actions";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +32,8 @@ export default async function ImprimirPresupuestoPage({ params }: { params: Prom
         }}
       />
 
-      <div className="no-print flex justify-end mb-4">
+      <div className="no-print flex items-center justify-between mb-4">
+        <CodigoPedidoEditable id={p.id} valorInicial={p.codigoPedido} accion={actualizarCodigoPedidoPresupuesto} />
         {p.factura ? (
           <Link
             href={`/facturas/${p.factura.id}/imprimir`}
@@ -51,6 +54,7 @@ export default async function ImprimirPresupuestoPage({ params }: { params: Prom
             <h1 className="text-[26px] font-serif tracking-tight">Presupuesto</h1>
             <div className="border-t-4 border-[#16211e] w-[420px] mt-1 mb-2" />
             <div className="text-[13px]">{fechaLarga(p.fecha)}</div>
+            {p.codigoPedido && <div className="text-[12px] text-[#5b6b66] mt-0.5">Nº de pedido: {p.codigoPedido}</div>}
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.jpg" alt="Lindilla" className="h-16 w-auto" />
